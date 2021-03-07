@@ -1,0 +1,36 @@
+env:
+  browser: true
+  commonjs: true
+  es6: true
+extends:
+  - standard
+globals:
+  Atomics: readonly
+  SharedArrayBuffer: readonly
+  "$": true
+  "jQuery": true
+  "AV": true
+  "MathJax": true
+  "test": true
+  "ActiveXObject": true
+  "md5": true
+  "autosize": true
+  "uaparser": true
+  "CounterFactory": true
+  "MCounter": true
+  "kill": true
+  "Fingerprint2": true
+parser: babel-eslint
+parserOptions:
+  ecmaVersion: 2018
+  sourceType: module
+  allowImportExportEverywhere: true
+rules: {
+  "no-tabs":"off",
+  "no-prototype-builtins":"off",
+  "eqeqeq":"off",
+  "no-useless-escape":"off",
+  "no-new":"off",
+  "new-cap":"off",
+  "no-unused-expressions":"off"
+}
