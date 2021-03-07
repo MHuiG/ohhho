@@ -3,7 +3,7 @@
 [![State-of-the-art Shitcode](https://img.shields.io/static/v1?label=State-of-the-art&message=Shitcode&color=7B5804)](https://github.com/trekhleb/state-of-the-art-shitcode)
 ![](https://img.shields.io/npm/v/ohhho?color=critical&logo=npm&style=flat-square)
 ![npm bundle size (scoped)](https://img.shields.io/bundlephobia/minzip/ohhho?style=flat-square&label=size)
-![license](https://img.shields.io/github/license/MHuiG/ohhho?style=flat-square)
+![license](https://img.shields.io/github/license/MHuiG/ohhho)
 
 *****
 
