@@ -225,6 +225,18 @@ async function handleRequest(request) {
             body: JSON.stringify(Item)
           }));
         }catch(e){}
+        const meta = await OHHHO.get("meta")
+        let lm=[]
+        if(meta){
+          lm=JSON.parse(meta)
+          var index = lm.indexOf(Item.url)
+          if (index == -1) {
+            lm.push(Item.url)
+          }
+        }else{
+          lm.push(Item.url)
+        }
+        await OHHHO.put("meta",JSON.stringify(lm))
         let it = getIt(Item)
         return new Response(JSON.stringify(it), headers_init)
       }else if(request.method=="GET"){
