@@ -93,9 +93,7 @@ async function handleRequest(request) {
         for (const it of q) {
          let itTime = new Date(it.time)
          var dateDiff = p.time.getTime() - itTime.getTime();//时间差的毫秒数
-         var dayDiff = Math.floor(dateDiff / (24 * 3600 * 1000));//计算出相差天数
          var leave1=dateDiff%(24*3600*1000) //计算天数后剩余的毫秒数
-         var hours=Math.floor(leave1/(3600*1000))//计算出小时数
          //计算相差分钟数
          var leave2=leave1%(3600*1000) //计算小时数后剩余的毫秒数
          var minutes=Math.floor(leave2/(60*1000))//计算相差分钟数
@@ -119,6 +117,15 @@ async function handleRequest(request) {
         }
         q.push(p)
         await OHHHO.put("IPTime",JSON.stringify(q))
+
+        // 检测大文本攻击
+        var la =body.comment?body.comment.length:0
+        var lb =body.link?body.link.length:0
+        var lc =body.nick?body.nick.length:0
+        var ln = Math.max( la,lb,lc )
+        if(ln>1000000){
+          return new Response("那太大了", headers_init);
+        }
         /************************************** */
 
         let Item = toItem(body)

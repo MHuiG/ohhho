@@ -17,7 +17,6 @@ const inputs = (root) => {
       })
       if (i == 'veditor') {
         dom.on('input', _el, (e) => {
-          console.log(_el.value.length)
           window.MV.veditorLength = _el.value.length
           if (!window.MV.veditorPassInterval) {
             window.MV.veditorPassInterval = 1
