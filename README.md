@@ -19,11 +19,10 @@
 
 - 任何花里胡哨的功能
 - 第三方数据接口
-- 安全策略
 - 主题支持（永远没有）
 - 评论管理系统
 - 任何移除后基础评论仍然正常的功能
-- 本项目文档
+- 本项目文档（垃圾代码书写准则）
 
 ## Releases
 
@@ -47,6 +46,42 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.3/worker/dist/worker.js.sig
 - CloudFlareWorker 脚本共计一个（ worker.js）。
 - 系统关键请求共计3个。
 - 中国地区使用 CloudFlareAnycast 技术和 DNSPOD 智能解析技术 以及 优选 CloudFlare节点 IP 负载均衡的方法，系统关键请求时间可在 100-300ms 左右。
+
+# 安全策略
+
+## 检测大文本攻击
+
+文本长度大于1000000，请求将返回"那太大了"
+
+## Cloudflare API 防火墙规则
+
+存储记录15分钟内原始客户端（访问者）IP 地址、代理服务器 IP 地址、IP 地理位置（Cloudflare需开启 IP 地理位置）
+
+15分钟内发送评论超过30条，访问者IP将被永久封禁。
+
+Cloudflare 如何处理 HTTP 请求标头：
+
+https://support.cloudflare.com/hc/zh-cn/articles/200170986
+
+Cloudflare  防火墙 API文档：
+
+ https://api.cloudflare.com/#firewall-rules-properties
+
+ https://developers.cloudflare.com/firewall/api
+
+  https://developers.cloudflare.com/firewall/cf-firewall-rules
+
+# API
+
+## 批准状态
+
+评论数据 `approval `字段为 `false`则不会向前端发送展示数据。
+
+## 目标API地址
+
+环境变量：`APIPATH`
+
+向目标API地址发送包含当前评论数据的POST请求，供外部程序实现通知功能、垃圾评论检测等。
 
 # 如何使用
 

@@ -105,14 +105,16 @@ async function handleRequest(request) {
             q.splice(index, 1);
           }
          }else{
-           if (p.ip==it.ip||p.XForwardedFor==it.XForwardedFor) {
+           if ((p.ip&&p.ip==it.ip)||(p.XForwardedFor&&p.XForwardedFor==it.XForwardedFor)) {
              num++
            }
          }
         }
-        if(num>50){
+        if(num>30){
           // Cloudflare API 防火墙规则
           // https://api.cloudflare.com/#firewall-rules-properties
+          // https://developers.cloudflare.com/firewall/api
+          // https://developers.cloudflare.com/firewall/cf-firewall-rules
 
         }
         q.push(p)
@@ -157,6 +159,15 @@ async function handleRequest(request) {
           ls.push(Item)
         }
         await OHHHO.put(Item.url,JSON.stringify(ls))
+        try{
+          await fetch(new Request(APIPATH, {
+            method: "POST",
+            headers: {
+              "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+            },
+            body: JSON.stringify(Item)
+          }));
+        }catch(e){}
         let it = getIt(Item)
         return new Response(JSON.stringify(it), headers_init)
       }else if(request.method=="GET"){
