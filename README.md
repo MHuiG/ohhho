@@ -55,6 +55,14 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.3/worker/dist/worker.js.sig
 
 ## Cloudflare API 防火墙规则
 
+环境变量：
+
+`AUTHEMAIL`：  X-Auth-Email
+
+`AUTHKEY` ： X-Auth-Key
+
+`ZONEID` ： zone_identifier
+
 存储记录15分钟内原始客户端（访问者）IP 地址、代理服务器 IP 地址、IP 地理位置（Cloudflare需开启 IP 地理位置）
 
 15分钟内发送评论超过30条，访问者IP将被永久封禁。
@@ -81,7 +89,7 @@ Cloudflare  防火墙 API文档：
 
 环境变量：`APIPATH`
 
-向目标API地址发送包含当前评论数据的POST请求，供外部程序实现通知功能、垃圾评论检测等。
+当前评论数据已完成存储后，向目标API地址发送包含当前评论数据的POST请求，供外部程序实现通知功能、垃圾评论检测等。
 
 # 如何使用
 

@@ -116,6 +116,64 @@ async function handleRequest(request) {
           // https://developers.cloudflare.com/firewall/api
           // https://developers.cloudflare.com/firewall/cf-firewall-rules
 
+          let filters = await fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/filters", {
+            method: "GET",
+            headers: {
+              "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+              "X-Auth-Email": AUTHEMAIL,
+              "X-Auth-Key": AUTHKEY,
+              "Content-Type": "application/json",
+            },
+          }));
+          let result=(await filters.json()).result
+          let flag=0
+          let i=0
+          for(;i<result.length;i++){
+            if(result[i].ref&&result[i].ref=="OHHHO"){
+              flag=1
+              break
+            }
+          }
+          if(flag){
+            let item=result[i]
+            let expression = item.expression
+            if (p.ip) {
+              expression += " or (ip.src eq "+p.ip+")"
+            }
+            if (p.XForwardedFor) {
+              expression += " or (http.x_forwarded_for eq "+p.XForwardedFor+")"
+            }
+            item.expression=expression
+            await fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/filters", {
+              method: "PUT",
+              headers: {
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+                "X-Auth-Email": AUTHEMAIL,
+                "X-Auth-Key": AUTHKEY,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify([item])
+            }));
+          }else{
+            let expression = "(ip.src eq 127.0.0.1)"
+            if (p.ip) {
+              expression = "(ip.src eq "+p.ip+")"
+            } else if (p.XForwardedFor) {
+              expression = "(http.x_forwarded_for eq "+p.XForwardedFor+")"
+            }
+            await fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/firewall/rules", {
+              method: "POST",
+              headers: {
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+                "X-Auth-Email": AUTHEMAIL,
+                "X-Auth-Key": AUTHKEY,
+                "Content-Type": "application/json",
+              },
+              body: '[{"description": "OHHHO","action": "block","filter": {"expression": "'+expression+'","ref": "OHHHO"}}]'
+            }));
+          }
+
+
         }
         q.push(p)
         await OHHHO.put("IPTime",JSON.stringify(q))
@@ -154,7 +212,6 @@ async function handleRequest(request) {
           }else{
             ls.push(Item)
           }
-          await OHHHO.delete(Item.url)
         }else{
           ls.push(Item)
         }
