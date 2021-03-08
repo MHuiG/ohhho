@@ -28,22 +28,22 @@
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.3/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.4/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.3/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.4/worker/dist/worker.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.3/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.4/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.3/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.4/worker/dist/worker.js.sig
 
 
 
 # 参数和指标
 
-- 前端 JS 脚本共计一个（ ohhho.min.js ） 文件大小为 74.35 KB，gzip 压缩后为 22.3 KB。
-- CloudFlareWorker 脚本共计一个（ worker.js）。
+- 前端 JS 脚本共计一个（ohhho.min.js） 文件大小为 74.35 KB，gzip 压缩后为 22.3 KB。
+- CloudFlareWorker 脚本共计一个（worker.js）。
 - 系统关键请求共计3个。
 - 中国地区使用 CloudFlareAnycast 技术和 DNSPOD 智能解析技术 以及 优选 CloudFlare节点 IP 负载均衡的方法，系统关键请求时间可在 100-300ms 左右。
 
