@@ -46,7 +46,6 @@ async function handleRequest(request) {
       "Access-Control-Allow-Origin": "*",
     },
   };
-  console.log(path);
   try {
     if (path == "/favicon.ico") {
       return fetch("https://cdn.jsdelivr.net/npm/mhg@latest");
@@ -155,9 +154,7 @@ async function handleRequest(request) {
   }
 }
 
-
-
-var RID = function() {
+var NewID = function() {
   var str = "abcdefghijklmnopqrstuvwxyz0123456789";
   var result = "";
   for(var i = 0; i < 24; i++) {
@@ -169,13 +166,18 @@ var RID = function() {
 var toItem = function(body){
   let Item={}
   Item.comment=body.comment
+  Item.commentHtml=md(XSS(body.comment))
   Item.createdAt=new Date()
   Item.mail=body.mail
+  Item.mailMd5=md5(body.mail)
   Item.ua=body.ua
+  const ua=uaparser(Item.ua)
+  Item.browser=ua.browser
+  Item.os=ua.os
   Item.ip=body.ip
-  Item.id=RID()
-  Item.link=body.link
-  Item.nick=body.nick
+  Item.id=NewID()
+  Item.link=XSS(body.link)
+  Item.nick=XSS(body.nick)
   Item.url=body.url
   if(body.rid){
     Item.rid=body.rid
@@ -187,19 +189,12 @@ var toItem = function(body){
 }
 var getIt = function(Item){
   let it={}
-  it.comment=md(XSS(Item.comment))
+  it.comment=Item.commentHtml
+  it.mailMd5=Item.mailMd5
   it.createdAt=Item.createdAt
-  it.mailMd5=md5(Item.mail)
-  const ua=uaparser(Item.ua)
-  it.browser=ua.browser
-  it.os=ua.os
   it.id=Item.id
-  if(Item.nick){
-    it.nick=XSS(Item.nick)
-  }
-  if (Item.link) {
-    it.link=XSS(Item.link)
-  }
+  it.nick=Item.nick
+  it.link=Item.link
   it.url=Item.url
   if(Item.rid){
     it.rid=Item.rid
