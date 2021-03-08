@@ -46,6 +46,10 @@ async function handleRequest(request) {
       "Access-Control-Allow-Origin": "*",
     },
   };
+  const CFConnectingIP=request.headers.get("CF-Connecting-IP")
+  const XForwardedFor=request.headers.get("X-Forwarded-For")
+  const CfIpcountry=request.headers.get("Cf-Ipcountry")
+  const XRealIP=new Map(request.headers).get('x-real-ip')
   try {
     if (path == "/favicon.ico") {
       return fetch("https://cdn.jsdelivr.net/npm/mhg@latest");
@@ -68,7 +72,55 @@ async function handleRequest(request) {
         for (const entry of formData.entries()) {
           body[entry[0]] = entry[1]
         }
-        body.ip=new Map(request.headers).get('x-real-ip')
+        body.ip = CFConnectingIP || XRealIP
+        body.XForwardedFor = XForwardedFor
+        body.CfIpcountry = CfIpcountry
+        /************************************** */
+        // 检测 request  IP-Time
+        // 15min 50
+        const now = new Date()
+        let p={}
+        p.ip=body.ip
+        p.XForwardedFor=body.XForwardedFor
+        p.CfIpcountry=body.CfIpcountry
+        p.time=new Date()
+        let q=[]
+        let IPTime=await OHHHO.get("IPTime")
+        if(IPTime){
+          q=JSON.parse(IPTime)
+        }
+        let num=0
+        for (const it of q) {
+         let itTime = new Date(it.time)
+         var dateDiff = p.time.getTime() - itTime.getTime();//时间差的毫秒数
+         var dayDiff = Math.floor(dateDiff / (24 * 3600 * 1000));//计算出相差天数
+         var leave1=dateDiff%(24*3600*1000) //计算天数后剩余的毫秒数
+         var hours=Math.floor(leave1/(3600*1000))//计算出小时数
+         //计算相差分钟数
+         var leave2=leave1%(3600*1000) //计算小时数后剩余的毫秒数
+         var minutes=Math.floor(leave2/(60*1000))//计算相差分钟数
+         
+         if(minutes>15){
+           // 移除过时数据
+          var index = q.indexOf(it)
+          if (index > -1) {
+            q.splice(index, 1);
+          }
+         }else{
+           if (p.ip==it.ip||p.XForwardedFor==it.XForwardedFor) {
+             num++
+           }
+         }
+        }
+        if(num>50){
+          // Cloudflare API 防火墙规则
+          // https://api.cloudflare.com/#firewall-rules-properties
+
+        }
+        q.push(p)
+        await OHHHO.put("IPTime",JSON.stringify(q))
+        /************************************** */
+
         let Item = toItem(body)
         let ls=[]
         const c= await OHHHO.get(Item.url)
@@ -128,7 +180,9 @@ async function handleRequest(request) {
             let p=[]
             for (let i = 0; i < num; i++) {
               let ele = getIt(ls[i]);
-              p.push(ele)
+              if(ele.approval){
+                p.push(ele)
+              }
             }
             p.reverse()
             let q=[]
@@ -165,6 +219,7 @@ var NewID = function() {
 
 var toItem = function(body){
   let Item={}
+  Item.approval=true // 批准状态
   Item.comment=body.comment
   Item.commentHtml=md(XSS(body.comment))
   Item.createdAt=new Date()
@@ -189,6 +244,7 @@ var toItem = function(body){
 }
 var getIt = function(Item){
   let it={}
+  it.approval=Item.approval
   it.comment=Item.commentHtml
   it.mailMd5=Item.mailMd5
   it.createdAt=Item.createdAt
