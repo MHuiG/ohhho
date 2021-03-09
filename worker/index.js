@@ -77,8 +77,7 @@ async function handleRequest(request) {
         body.CfIpcountry = CfIpcountry
         /************************************** */
         // 检测 request  IP-Time
-        // 15min 50
-        let enable_captcha = 0
+        // 15min
         const now = new Date()
         let p={}
         p.ip=body.ip
@@ -175,8 +174,23 @@ async function handleRequest(request) {
           }
           return new Response("本站正遭受攻击，请稍后再试！", headers_init);
         }
-        if(q.length>15){
-          enable_captcha = true
+        if(q.length>5){
+          let wait_attack=await OHHHO.get("ohhho_attack")
+          if(wait_attack){
+            wait_attack=JSON.parse(wait_attack)
+            var dateDiff = new Date().getTime() - new Date(wait_attack.time).getTime();//时间差的毫秒数
+            var leave1=dateDiff%(24*3600*1000) //计算天数后剩余的毫秒数
+            //计算相差分钟数
+            var leave2=leave1%(3600*1000) //计算小时数后剩余的毫秒数
+            var minutes=Math.floor(leave2/(60*1000))//计算相差分钟数
+            if(minutes>1){
+              await OHHHO.put("ohhho_attack",JSON.stringify({"time":new Date()}))
+            }else{
+              return new Response("系统触发了防御机制-强制等待策略，请一分钟后重试！", headers_init);
+            }
+          }else{
+            await OHHHO.put("ohhho_attack",JSON.stringify({"time":new Date()}))
+          }
         }
         if(q.length>20){
           await fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/settings/security_level", {

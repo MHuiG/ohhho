@@ -69,15 +69,15 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.4/worker/dist/worker.js.sig
 
 存储记录15分钟内原始客户端（访问者）IP 地址、代理服务器 IP 地址、IP 地理位置（Cloudflare需开启 IP 地理位置）
 
-单IP15分钟内发送评论超过15条，访问者IP将被永久封禁。
+单IP15分钟内发送评论超过15条，访问者IP将被永久封禁且该ip超过 15/15min  的数据流不再存入。
 
-#### 攻击频率 15/15min all ip
+#### 攻击频率 5/15min all ip
 
-全部IP15分钟内发送评论超过15条，启用验证码策略.
+全部IP15分钟内发送评论超过5条，启用强制等待策略，系统睡眠1分钟.
 
 #### 攻击频率 20/15min all ip
 
-全部IP15分钟内发送评论超过20条，Cloudflare 开启 Under Attack 模式.
+全部IP15分钟内发送评论超过20条，Cloudflare 开启 Under Attack 模式且超过 20/15min all ip 的数据流不再存入。
 
 ### 文档
 
