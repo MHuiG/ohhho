@@ -78,6 +78,7 @@ async function handleRequest(request) {
         /************************************** */
         // 检测 request  IP-Time
         // 15min 50
+        let enable_captcha = 0
         const now = new Date()
         let p={}
         p.ip=body.ip
@@ -110,7 +111,7 @@ async function handleRequest(request) {
            }
          }
         }
-        if(num>30){
+        if(num>15){
           // Cloudflare API 防火墙规则
           // https://api.cloudflare.com/#firewall-rules-properties
           // https://developers.cloudflare.com/firewall/api
@@ -172,9 +173,27 @@ async function handleRequest(request) {
               body: '[{"description": "OHHHO","action": "block","filter": {"expression": "'+expression+'","ref": "OHHHO"}}]'
             }));
           }
-
-
+          return new Response("本站正遭受攻击，请稍后再试！", headers_init);
         }
+        if(q.length>20){
+          enable_captcha = true
+        }
+        if(q.length>25){
+          await fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/settings/security_level", {
+            method: "PATCH",
+            headers: {
+              "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+              "X-Auth-Email": AUTHEMAIL,
+              "X-Auth-Key": AUTHKEY,
+              "Content-Type": "application/json",
+            },
+            body: '{"value":"under_attack"}'
+          }));
+          return new Response("本站正遭受攻击，请稍后再试！！", headers_init);
+        }
+
+
+
         q.push(p)
         await OHHHO.put("IPTime",JSON.stringify(q))
 
