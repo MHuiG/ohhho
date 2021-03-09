@@ -175,10 +175,10 @@ async function handleRequest(request) {
           }
           return new Response("本站正遭受攻击，请稍后再试！", headers_init);
         }
-        if(q.length>20){
+        if(q.length>15){
           enable_captcha = true
         }
-        if(q.length>25){
+        if(q.length>20){
           await fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/settings/security_level", {
             method: "PATCH",
             headers: {

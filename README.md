@@ -65,19 +65,19 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.4/worker/dist/worker.js.sig
 
 ### 策略
 
-#### 攻击频率 15/15min 
+#### 攻击频率 15/15min per ip
 
 存储记录15分钟内原始客户端（访问者）IP 地址、代理服务器 IP 地址、IP 地理位置（Cloudflare需开启 IP 地理位置）
 
-15分钟内发送评论超过15条，访问者IP将被永久封禁。
+单IP15分钟内发送评论超过15条，访问者IP将被永久封禁。
 
-#### 攻击频率 20/15min
+#### 攻击频率 15/15min all ip
 
-15分钟内发送评论超过20条，启用验证码策略.
+全部IP15分钟内发送评论超过15条，启用验证码策略.
 
-#### 攻击频率 25/15min
+#### 攻击频率 20/15min all ip
 
-15分钟内发送评论超过25条，Cloudflare 开启 Under Attack 模式.
+全部IP15分钟内发送评论超过20条，Cloudflare 开启 Under Attack 模式.
 
 ### 文档
 
