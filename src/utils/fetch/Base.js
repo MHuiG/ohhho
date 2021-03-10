@@ -1,5 +1,6 @@
 import ajax from '../plugins/ajax'
 import Bean from './Bean'
+import dom from '../plugins/dom'
 function FetchBase (root) {
   const url = `${root.conf.serverURL}/comment`
   root.fetchCount = (root) => {
@@ -118,6 +119,9 @@ function FetchBase (root) {
           const item = new Bean()
           item.create(data)
           callback(item)
+        } else if (data.code) {
+          if(data.code==1)
+            getrefreshtoken()
         } else {
           root.error(12138, data)
         }
@@ -126,6 +130,70 @@ function FetchBase (root) {
         root.error(status, data)
       }
     })
+    function getrefreshtoken(){
+      ajax({
+        url: `${root.conf.serverURL}/getrefreshtoken`,
+        type: 'GET',
+        success: function (data) {
+          window.MV.rt=data
+          root.alert.show({
+            type: 2,
+            text: `系统触发了防御机制-Captcha策略，请进行人机验证！`,
+            cb: getcap
+          })
+        },
+        error: function (status, data) {
+          root.error(status, data)
+        }
+      })
+    }
+    function getcap(){
+      ajax({
+        url: `${root.conf.serverURL}/getcap`,
+        type: 'GET',
+        data: {
+          refreshtoken: window.MV.rt
+        },
+        success: function (data) {
+          window.MV.recapq=data
+          root.alert.show({
+            type: 3,
+            text: `<input type="checkbox" class="captcha">我是人类`,
+            cb: ()=>{
+              const captcha = root.el.querySelector('.captcha')
+              dom.on('click', captcha, (e) => {
+                getimgcap()
+              })
+            }
+          })
+        },
+        error: function (status, data) {
+          root.error(status, data)
+        }
+      })
+    }
+    function getimgcap(){
+      ajax({
+        url: `${root.conf.serverURL}/getimgcap`,
+        type: 'GET',
+        data: {
+          refreshtoken: window.MV.rt,
+          recapq: window.MV.recapq
+        },
+        success: function (data) {
+          console.log(data)
+          window.MV.imgcap=data
+          root.alert.show({
+            type: 3,
+            text: `<img src="data:image/gif;base64,${window.MV.imgcap}">`,
+            
+          })
+        },
+        error: function (status, data) {
+          root.error(status, data)
+        }
+      })
+    }
   }
 }
 
