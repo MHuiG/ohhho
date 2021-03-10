@@ -4,10 +4,10 @@ const alert = (root) => {
   root.alert = {
     show (o) {
       mark.innerHTML = `<div class="valert txt-center"><div class="vtext">${o.text}</div><div class="vbtns"></div></div>`
-      if(o.type==3){
+      if (o.type == 3) {
         mark.setAttribute('style', 'display:block;')
         o.cb && o.cb()
-      }else if(o.type==2){
+      } else if (o.type == 2) {
         const vbtns = mark.querySelector('.vbtns')
         const cBtn = `<button class="vsure vbtn">${(o.ctxt) || root.i18n.continue}</button>`
         vbtns.innerHTML = cBtn
@@ -16,23 +16,23 @@ const alert = (root) => {
         dom.on('click', ok, (e) => {
           o.cb && o.cb()
         })
-      }else{
-      const vbtns = mark.querySelector('.vbtns')
-      const cBtn = `<button class="vcancel vbtn">${(o.ctxt) || root.i18n.cancel}</button>`
-      const oBtn = `<button class="vsure vbtn">${(o.otxt) || root.i18n.continue}</button>`
-      vbtns.innerHTML = `${cBtn}${o.type ? oBtn : ''}`
-      mark.querySelector('.vcancel').addEventListener('click', (e) => {
-        root.alert.hide()
-      })
-      mark.setAttribute('style', 'display:block;')
-      if (o.type) {
-        const ok = mark.querySelector('.vsure')
-        dom.on('click', ok, (e) => {
+      } else {
+        const vbtns = mark.querySelector('.vbtns')
+        const cBtn = `<button class="vcancel vbtn">${(o.ctxt) || root.i18n.cancel}</button>`
+        const oBtn = `<button class="vsure vbtn">${(o.otxt) || root.i18n.continue}</button>`
+        vbtns.innerHTML = `${cBtn}${o.type ? oBtn : ''}`
+        mark.querySelector('.vcancel').addEventListener('click', (e) => {
           root.alert.hide()
-          o.cb && o.cb()
         })
+        mark.setAttribute('style', 'display:block;')
+        if (o.type) {
+          const ok = mark.querySelector('.vsure')
+          dom.on('click', ok, (e) => {
+            root.alert.hide()
+            o.cb && o.cb()
+          })
+        }
       }
-    }
     },
     hide () {
       mark.setAttribute('style', 'display:none;')
@@ -64,7 +64,7 @@ const alert = (root) => {
     root.el.querySelector('.vsubmit').removeAttribute('disabled-submit')
     root.submitting.hide()
     root.nodata.hide()
-    root.reset()
+    // root.reset()
   }
 }
 module.exports = alert

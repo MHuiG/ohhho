@@ -340,7 +340,8 @@ async function handleRequest(request) {
       }
       let capi=await GetCapJson()
       capi=capi["0"]
-      const id = randomNum(0,10185)
+      // const id = randomNum(0,10185)
+      const id = 0
       let _CAP = {
           capque : capi[id][1],
           capans : capi[id][2],

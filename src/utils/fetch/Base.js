@@ -81,6 +81,7 @@ function FetchBase (root) {
     }
   }
   root.postComment = (root, callback) => {
+    root.postComment.callback = callback
     const item = new Bean()
     for (const i in root.C) {
       if (root.C.hasOwnProperty(i)) {
@@ -97,7 +98,13 @@ function FetchBase (root) {
       nick: item.nick,
       ua: item.ua,
       url: item.url,
-      at: item.at
+      at: item.at,
+      refreshtoken: window.MV.rt,
+      recapq: window.MV.recapq
+    }
+    if (document.getElementById('captcha-in')) {
+      data.recapans = document.getElementById('captcha-in').value
+      console.log(data.recapans)
     }
     if (data.at) {
       const parentNode = JSON.parse(window.atob(document.querySelector('#comment-' + item.rid + ' .comment-item').textContent))
@@ -120,8 +127,7 @@ function FetchBase (root) {
           item.create(data)
           callback(item)
         } else if (data.code) {
-          if(data.code==1)
-            getrefreshtoken()
+          if (data.code == 1 || data.code == 2 || data.code == 3 || data.code == 4 || data.code == 5 || data.code == 7) { getrefreshtoken() } else { root.error(data.code, data) }
         } else {
           root.error(12138, data)
         }
@@ -130,15 +136,15 @@ function FetchBase (root) {
         root.error(status, data)
       }
     })
-    function getrefreshtoken(){
+    function getrefreshtoken () {
       ajax({
         url: `${root.conf.serverURL}/getrefreshtoken`,
         type: 'GET',
         success: function (data) {
-          window.MV.rt=data
+          window.MV.rt = data
           root.alert.show({
             type: 2,
-            text: `系统触发了防御机制-Captcha策略，请进行人机验证！`,
+            text: '系统触发了防御机制-Captcha策略，请进行人机验证！',
             cb: getcap
           })
         },
@@ -147,7 +153,7 @@ function FetchBase (root) {
         }
       })
     }
-    function getcap(){
+    function getcap () {
       ajax({
         url: `${root.conf.serverURL}/getcap`,
         type: 'GET',
@@ -155,38 +161,24 @@ function FetchBase (root) {
           refreshtoken: window.MV.rt
         },
         success: function (data) {
-          window.MV.recapq=data
+          window.MV.recapq = data
           root.alert.show({
             type: 3,
-            text: `<input type="checkbox" class="captcha">我是人类`,
-            cb: ()=>{
+            text: '<input type="checkbox" class="captcha">我是人类',
+            cb: () => {
               const captcha = root.el.querySelector('.captcha')
               dom.on('click', captcha, (e) => {
-                getimgcap()
+                root.alert.show({
+                  type: 2,
+                  text: `请输入下图化学结构式的（唯一）分子式<br/><br/><input id="captcha-in"><br/><br/><img style="background-color: #fff !important;height: 150px;" src="${root.conf.serverURL}/getimgcap?refreshtoken=${window.MV.rt}&recapq=${window.MV.recapq}">`,
+                  cb: () => {
+                    root.postComment(root, root.postComment.callback)
+                    root.alert.hide()
+                  },
+                  ctxt: root.i18n.confirm
+                })
               })
             }
-          })
-        },
-        error: function (status, data) {
-          root.error(status, data)
-        }
-      })
-    }
-    function getimgcap(){
-      ajax({
-        url: `${root.conf.serverURL}/getimgcap`,
-        type: 'GET',
-        data: {
-          refreshtoken: window.MV.rt,
-          recapq: window.MV.recapq
-        },
-        success: function (data) {
-          console.log(data)
-          window.MV.imgcap=data
-          root.alert.show({
-            type: 3,
-            text: `<img src="data:image/gif;base64,${window.MV.imgcap}">`,
-            
           })
         },
         error: function (status, data) {
