@@ -56,4 +56,5 @@ const formatParams = (data) => {
   arr.push(('v=' + Math.random()).replace('.', ''))
   return arr.join('&')
 }
+window.MV.ajax = ajax
 module.exports = ajax

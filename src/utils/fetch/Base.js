@@ -1,6 +1,6 @@
 import ajax from '../plugins/ajax'
 import Bean from './Bean'
-import dom from '../plugins/dom'
+import getScript from '../plugins/getScript'
 function FetchBase (root) {
   const url = `${root.conf.serverURL}/comment`
   root.fetchCount = (root) => {
@@ -122,7 +122,7 @@ function FetchBase (root) {
           callback(item)
         } else if (data.code) {
           if (data.code == 601 || data.code == 602 || data.code == 603 || data.code == 604 || data.code == 605 || data.code == 607 || data.code == 608) {
-            getrefreshtoken()
+            getScript(`${root.conf.serverURL}/ChallengeCaptcha`)
           } else {
             root.error(data.code, data)
           }
@@ -134,86 +134,6 @@ function FetchBase (root) {
         root.error(status, data)
       }
     })
-    function getrefreshtoken () {
-      ajax({
-        url: `${root.conf.serverURL}/getrefreshtoken`,
-        type: 'GET',
-        success: function (data) {
-          window.MV.rt = data
-          root.alert.show({
-            type: 2,
-            text: '系统触发了防御机制-Captcha策略，请进行人机验证！',
-            cb: getcap
-          })
-        },
-        error: function (status, data) {
-          root.error(status, data)
-        }
-      })
-    }
-    function getcap () {
-      ajax({
-        url: `${root.conf.serverURL}/getcap`,
-        type: 'GET',
-        data: {
-          refreshtoken: window.MV.rt
-        },
-        success: function (data) {
-          window.MV.recapq = data
-          root.alert.show({
-            type: 3,
-            text: '<div class="captcha"><input type="checkbox" class="captcha-check"> 我是人类 | I am human</div>',
-            cb: () => {
-              const captcha = root.el.querySelector('.captcha-check')
-              dom.on('click', captcha, (e) => {
-                setTimeout(() => {
-                  root.alert.show({
-                    type: 2,
-                    text: `请输入下图化学结构式的（唯一）分子式<br/><br/><input id="captcha-in"><br/><br/><img style="background-color: #fff !important;height: 150px;" src="${root.conf.serverURL}/getimgcap?refreshtoken=${window.MV.rt}&recapq=${window.MV.recapq}">`,
-                    cb: () => {
-                      if (document.getElementById('captcha-in')) {
-                        getaccesstoken()
-                      }
-                    },
-                    ctxt: root.i18n.confirm
-                  })
-                }, 1000)
-              })
-            }
-          })
-        },
-        error: function (status, data) {
-          root.error(status, data)
-        }
-      })
-    }
-    function getaccesstoken () {
-      ajax({
-        url: `${root.conf.serverURL}/getaccesstoken`,
-        type: 'GET',
-        data: {
-          refreshtoken: window.MV.rt,
-          recapq: window.MV.recapq,
-          recapans: document.getElementById('captcha-in').value
-        },
-        success: function (data) {
-          if (data.code) {
-            if (data.code == 601 || data.code == 602 || data.code == 603 || data.code == 604 || data.code == 605 || data.code == 607 || data.code == 608) {
-              getrefreshtoken()
-            } else {
-              root.error(data.code, data)
-            }
-          } else {
-            window.MV.accesstoken = data
-            root.postComment(root, root.postComment.callback)
-            root.alert.hide()
-          }
-        },
-        error: function (status, data) {
-          root.error(status, data)
-        }
-      })
-    }
   }
 }
 

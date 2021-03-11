@@ -1,4 +1,3 @@
-import Factory from './Factory'
 import { VERSION } from './Default'
 const ohhho = (option) => {
   if (!window.MV) {
@@ -6,6 +5,7 @@ const ohhho = (option) => {
     window.MV = Object.create(null)
     window.MV.v = VERSION
   }
+  const Factory = require('./Factory')
   return new Factory(option)
 }
 module.exports = ohhho

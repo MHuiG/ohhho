@@ -28,15 +28,15 @@
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.6/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.7/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.6/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.7/worker/dist/worker.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.6/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.7/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.6/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.7/worker/dist/worker.js.sig
 
 
 

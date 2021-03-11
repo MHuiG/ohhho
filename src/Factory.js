@@ -58,6 +58,7 @@ Factory.prototype.Start = function () {
     util.atEvt(root)
     util.submitBtnEvt(root)
     util.smile(root)
+    window.MV.root = root
   } catch (e) { console.error(e) }
 }
 module.exports = Factory
