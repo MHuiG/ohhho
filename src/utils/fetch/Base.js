@@ -99,12 +99,7 @@ function FetchBase (root) {
       ua: item.ua,
       url: item.url,
       at: item.at,
-      refreshtoken: window.MV.rt,
-      recapq: window.MV.recapq
-    }
-    if (document.getElementById('captcha-in')) {
-      data.recapans = document.getElementById('captcha-in').value
-      console.log(data.recapans)
+      accesstoken: window.MV.accesstoken
     }
     if (data.at) {
       const parentNode = JSON.parse(window.atob(document.querySelector('#comment-' + item.rid + ' .comment-item').textContent))
@@ -121,13 +116,16 @@ function FetchBase (root) {
       type: 'POST',
       data: data,
       success: function (data) {
-        console.log(data)
         if (data.comment) {
           const item = new Bean()
           item.create(data)
           callback(item)
         } else if (data.code) {
-          if (data.code == 1 || data.code == 2 || data.code == 3 || data.code == 4 || data.code == 5 || data.code == 7) { getrefreshtoken() } else { root.error(data.code, data) }
+          if (data.code == 601 || data.code == 602 || data.code == 603 || data.code == 604 || data.code == 605 || data.code == 607 || data.code == 608) {
+            getrefreshtoken()
+          } else {
+            root.error(data.code, data)
+          }
         } else {
           root.error(12138, data)
         }
@@ -164,22 +162,52 @@ function FetchBase (root) {
           window.MV.recapq = data
           root.alert.show({
             type: 3,
-            text: '<input type="checkbox" class="captcha">我是人类',
+            text: '<div class="captcha"><input type="checkbox" class="captcha-check"> 我是人类 | I am human</div>',
             cb: () => {
-              const captcha = root.el.querySelector('.captcha')
+              const captcha = root.el.querySelector('.captcha-check')
               dom.on('click', captcha, (e) => {
-                root.alert.show({
-                  type: 2,
-                  text: `请输入下图化学结构式的（唯一）分子式<br/><br/><input id="captcha-in"><br/><br/><img style="background-color: #fff !important;height: 150px;" src="${root.conf.serverURL}/getimgcap?refreshtoken=${window.MV.rt}&recapq=${window.MV.recapq}">`,
-                  cb: () => {
-                    root.postComment(root, root.postComment.callback)
-                    root.alert.hide()
-                  },
-                  ctxt: root.i18n.confirm
-                })
+                setTimeout(() => {
+                  root.alert.show({
+                    type: 2,
+                    text: `请输入下图化学结构式的（唯一）分子式<br/><br/><input id="captcha-in"><br/><br/><img style="background-color: #fff !important;height: 150px;" src="${root.conf.serverURL}/getimgcap?refreshtoken=${window.MV.rt}&recapq=${window.MV.recapq}">`,
+                    cb: () => {
+                      if (document.getElementById('captcha-in')) {
+                        getaccesstoken()
+                      }
+                    },
+                    ctxt: root.i18n.confirm
+                  })
+                }, 1000)
               })
             }
           })
+        },
+        error: function (status, data) {
+          root.error(status, data)
+        }
+      })
+    }
+    function getaccesstoken () {
+      ajax({
+        url: `${root.conf.serverURL}/getaccesstoken`,
+        type: 'GET',
+        data: {
+          refreshtoken: window.MV.rt,
+          recapq: window.MV.recapq,
+          recapans: document.getElementById('captcha-in').value
+        },
+        success: function (data) {
+          if (data.code) {
+            if (data.code == 601 || data.code == 602 || data.code == 603 || data.code == 604 || data.code == 605 || data.code == 607 || data.code == 608) {
+              getrefreshtoken()
+            } else {
+              root.error(data.code, data)
+            }
+          } else {
+            window.MV.accesstoken = data
+            root.postComment(root, root.postComment.callback)
+            root.alert.hide()
+          }
         },
         error: function (status, data) {
           root.error(status, data)

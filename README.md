@@ -28,21 +28,21 @@
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.5/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.6/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.5/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.6/worker/dist/worker.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.5/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.6/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.5/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.6/worker/dist/worker.js.sig
 
 
 
 # 参数和指标
 
-- 前端 JS 脚本共计一个（ohhho.min.js） 文件大小约为 75 KB，gzip 压缩后约为 23 KB。
+- 前端 JS 脚本共计一个（ohhho.min.js） 文件大小约为 80 KB，gzip 压缩后约为 25 KB。
 - CloudFlareWorker 脚本共计一个（worker.js）。
 - 系统关键请求共计3个。
 - 中国地区使用 CloudFlareAnycast 技术和 DNSPOD 智能解析技术 以及 优选 CloudFlare节点 IP 负载均衡的方法，系统关键请求时间可在 100-300ms 左右。
@@ -63,6 +63,10 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.5/worker/dist/worker.js.sig
 
 `ZONEID` ： zone_identifier
 
+`PRIVATEK` ： privatek
+
+`PRIVATEPASS` ： privatepass
+
 ### 策略
 
 #### 攻击频率 15/15min per ip
@@ -71,13 +75,17 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.5/worker/dist/worker.js.sig
 
 单IP15分钟内发送评论超过15条，访问者IP将被永久封禁且该ip超过 15/15min  的数据流不再存入。
 
-#### 攻击频率 5/15min all ip
+#### 攻击频率 10/15min all ip
 
-全部IP15分钟内发送评论超过5条，启用强制等待策略，系统睡眠1分钟.
+全部IP15分钟内发送评论超过10条，必须接受CAPTCHA(全自动区分计算机和人类的图灵测试).
+
+#### 攻击频率 12/15min all ip
+
+全部IP15分钟内发送评论超过12条，启用强制等待策略，系统睡眠1分钟.
 
 #### 攻击频率 20/15min all ip
 
-全部IP15分钟内发送评论超过20条，Cloudflare 开启 Under Attack 模式且超过 20/15min all ip 的数据流不再存入。
+全部IP15分钟内发送评论超过20条，Cloudflare 开启 Under Attack 模式且超过 20/15min all ip 的数据流不再存入。请注意这是自毁行为。
 
 ### 文档
 
@@ -94,6 +102,10 @@ Cloudflare  防火墙 API文档：
   https://developers.cloudflare.com/firewall/cf-firewall-rules
 
 # API
+
+## 配色方案
+
+可使用 CSS 变量修改配色方案.
 
 ## 批准状态
 

@@ -50,7 +50,8 @@ async function handleRequest(request) {
   const XForwardedFor=request.headers.get("X-Forwarded-For")
   const CfIpcountry=request.headers.get("Cf-Ipcountry")
   const XRealIP=new Map(request.headers).get('x-real-ip')
-  const privatek = "kjerwahfvfiuwehgfiuwrgfuisegfuiwdgfiuegwfdsi"
+  const privatek = PRIVATEK
+  const privatepass = PRIVATEPASS
   try {
     if (path == "/favicon.ico") {
       return fetch("https://cdn.jsdelivr.net/npm/mhg@latest");
@@ -175,13 +176,13 @@ async function handleRequest(request) {
           }
           return new Response("本站正遭受攻击，请稍后再试！", headers_init);
         }
-        if(q.length>5||q.length>0){
-          let ans=await CheckCaptcha(body.refreshtoken,privatek,body.recapq,body.recapans)
+        if(q.length>=10){
+          let ans=await checkAT(body.accesstoken,privatek,privatepass)
           if(ans!=true){
             return ans
           }
         }
-        if(q.length>16){
+        if(q.length>=12){
           let wait_attack=await OHHHO.get("ohhho_attack")
           if(wait_attack){
             wait_attack=JSON.parse(wait_attack)
@@ -333,20 +334,38 @@ async function handleRequest(request) {
       const RT = Encrypt(await JSON.stringify(_RT), privatek)
       return new Response(RT, headers_init)
     }
+    if (path.startsWith("/getaccesstoken")) {
+      const RToken = urlObj.searchParams.get('refreshtoken')
+      let recapq=urlObj.searchParams.get('recapq')
+      let recapans=urlObj.searchParams.get('recapans')
+      let ans=await CheckCaptcha(RToken,privatek,recapq,recapans)
+      if(ans!=true){
+        return ans
+      }
+      const _AccessToken = {
+          date: (new Date()).valueOf(),
+          salt: salt(),
+          RefreshToken: RToken,
+          privatepass: privatepass
+      }
+      const AT = Encrypt(await JSON.stringify(_AccessToken), privatek)
+      return new Response(AT, headers_init)
+  }
     if (path.startsWith("/getcap")) {
-      let ans=await CheckRT(urlObj.searchParams.get('refreshtoken'),privatek)
+      let RToken=urlObj.searchParams.get('refreshtoken')
+      let ans=await CheckRT(RToken,privatek)
       if(ans!=true){
         return ans
       }
       let capi=await GetCapJson()
       capi=capi["0"]
-      // const id = randomNum(0,10185)
-      const id = 0
+      const id = randomNum(0,10185)
       let _CAP = {
-          capque : capi[id][1],
-          capans : capi[id][2],
-          capid : id,
-          salt:salt()
+        RefreshToken: RToken,
+        capque : capi[id][1],
+        capans : capi[id][2],
+        capid : id,
+        salt:salt()
       }
       const recapq = Encrypt(await JSON.stringify(_CAP), privatek)
       return new Response(recapq, headers_init)
@@ -369,17 +388,7 @@ async function handleRequest(request) {
       }
     }
     if (path.startsWith("/test")) {
-      
-      return fetch(`https://raw.githubusercontent.com/MHuiG/Captcha-chemi/master/img/5815-08-7.gif`)
-
-
-      // let refreshtoken= urlObj.searchParams.get('refreshtoken')
-      // let recapq= urlObj.searchParams.get('recapq')
-      // let recapans= urlObj.searchParams.get('recapans')
-      // let ans=await CheckCaptcha(refreshtoken,privatek,recapq,recapans)
-      // if(ans!=true){
-      //   return ans
-      // }
+      return new Response("Hello test", headers_init);
     }
     /*********************************************************************************************** */
     return new Response("Hello world", headers_init);
@@ -456,8 +465,32 @@ var getIt = function(Item){
 }
 /*********************************************************************************************** */
 // Captcha
-async function CheckCaptcha(refreshtoken,privatek,recapq,recapans) {
-  let ans=await CheckRT(refreshtoken,privatek)
+async function checkAT(AT,privatek,privatepass) {
+  if(AT=="undefined"){
+    return returnc(7)
+  }
+  const RefreshToken = await JSON.parse(Decrypt(AT, privatek));
+  let RToken = RefreshToken["RefreshToken"];
+
+  if (
+    checktime(await JSON.parse(Decrypt(RToken, privatek))) &&
+    checkban(RToken, privatek) &&
+    RefreshToken["privatepass"] == privatepass &&
+    RefreshToken["date"] < new Date().valueOf() + 5 * 60 &&
+    RefreshToken["date"] > new Date().valueOf() - 5 * 60
+  ) {
+    let banlist = (await JSON.parse(await OHHHO.get("_banrt"))) || [];
+    banlist.push(RefreshToken);
+    await OHHHO.put("_banrt", await JSON.stringify(banlist), {
+      expirationTtl: 5 * 60,
+    });
+    return true;
+  } else {
+    return returnc(7);
+  }
+}
+async function CheckCaptcha(RToken,privatek,recapq,recapans) {
+  let ans=await CheckRT(RToken,privatek)
   if(ans!=true){
     return ans
   }
@@ -468,10 +501,7 @@ async function CheckCaptcha(refreshtoken,privatek,recapq,recapans) {
       return returnc(4)
     }
     const reqa = await JSON.parse(Decrypt(recapq, privatek))
-    if(await checkcap(reqa["capid"],recapans)){
-        let banlist = await JSON.parse(await OHHHO.get("ohhho_banrt")) || []
-        banlist.push(refreshtoken)
-        await OHHHO.put("ohhho_banrt",await JSON.stringify(banlist),{expirationTtl: 5*60})
+    if(await checkcap(reqa,recapans, RToken)){
         return true
     }else{
       return returnc(5)
@@ -480,15 +510,15 @@ async function CheckCaptcha(refreshtoken,privatek,recapq,recapans) {
       return returnc(3)
   }
 }
-async function CheckRT(refreshtoken,privatek) {
+async function CheckRT(RToken,privatek) {
   try { 
-    await JSON.parse(Decrypt(refreshtoken, privatek))
+    await JSON.parse(Decrypt(RToken, privatek))
   } catch (e) { 
     return returnc(0)
   }
-  const _RT = await JSON.parse(Decrypt(refreshtoken, privatek))
+  const _RT = await JSON.parse(Decrypt(RToken, privatek))
   if (checktime(_RT)) {
-    if(await checkban(refreshtoken, privatek)){
+    if(await checkban(RToken, privatek)){
       return true
     }else{
       return returnc(2)
@@ -501,10 +531,11 @@ async function GetCapJson() {
   let json= (await fetch("https://raw.githubusercontent.com/MHuiG/Captcha-chemi/master/cap.json")).json()
   return json
 }
-async function checkcap(q,ans){
+async function checkcap(q,ans,RToken){
   let capi=await GetCapJson()
   capi=capi["0"]
-  if(capi[q][2] == ans) return true
+  if(capi[q["capid"]][2] == ans&& RToken == q["RefreshToken"])
+    return true
   return false
 }
 
@@ -516,10 +547,11 @@ function returnc(i) {
       "Capthca需要校验",
       "Capthca校验错误",
       "Capthca答案错误",
-      "CapthcaID丢失"
+      "CapthcaID丢失",
+      "AccessToken校验失败"
   ]
   const as = {
-      code: i+1,
+      code: i+601,
       msg: code[i] || "未知错误，请联系管理员"
   }
   const ans = JSON.stringify(as)
@@ -532,7 +564,7 @@ function checktime(RT) {
   return false
 }
 async function checkban(RT){
-  const r = await JSON.parse(await OHHHO.get("ohhho_banrt"))
+  const r = await JSON.parse(await OHHHO.get("_banrt"))
   let len=0
   if(r)
     len=r.length
@@ -607,6 +639,7 @@ function Encrypt(str, pwd) {
   enc_str += salt;
   return enc_str;
 }
+
 function Decrypt(str, pwd) {
   if (str == "") return "";
   if (!pwd || pwd == "") { var pwd = "1234"; }
