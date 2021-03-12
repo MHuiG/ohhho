@@ -28,15 +28,15 @@
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.7/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.8/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.7/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.8/worker/dist/worker.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.7/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.8/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.7/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.8/worker/dist/worker.js.sig
 
 
 
@@ -57,15 +57,11 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.7/worker/dist/worker.js.sig
 
 ### 环境变量
 
-`AUTHEMAIL`：  X-Auth-Email
+`AUTHEMAIL`：  X-Auth-Email 【必填】
 
-`AUTHKEY` ： X-Auth-Key
+`AUTHKEY` ： X-Auth-Key 【必填】
 
-`ZONEID` ： zone_identifier
-
-`PRIVATEK` ： privatek
-
-`PRIVATEPASS` ： privatepass
+`ZONEID` ： zone_identifier 【必填】
 
 ### 策略
 
@@ -78,6 +74,42 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.7/worker/dist/worker.js.sig
 #### 攻击频率 10/15min all ip
 
 全部IP15分钟内发送评论超过10条，必须接受CAPTCHA(全自动区分计算机和人类的图灵测试).
+
+环境变量：
+
+`PRIVATEK` ： privatek 【必填】
+
+`PRIVATEPASS` ： privatepass 【必填】
+
+`CHECKRT` : true表示在有效期内AccessToken永久有效;false表示AccessToken在使用一次后就吊销
+
+`CAPTCHAAPI` : 自定义 Captcha
+
+示例：CAPTCHAAPI="https://test.workers.dev"
+
+必须含有可用路径 /ChallengeCaptchaScript 和 /CheckChallengeCaptcha
+
+/ChallengeCaptchaScript 需返回 自定义 Captcha JS 脚本，成功验证后 accesstoken 回调：
+
+```
+  window.MV.accesstoken=accesstoken
+  window.MV.root.postComment(window.MV.root, window.MV.root.postComment.callback)
+  window.MV.root.alert.hide()
+```
+
+验证失败回调：
+
+```
+  window.MV.root.el.querySelector('.vsubmit').removeAttribute('disabled-submit')
+  window.MV.root.submitting.hide()
+  window.MV.root.nodata.hide()
+```
+
+内核将向 /CheckChallengeCaptcha 发送 GET 请求 验证accesstoken，成功验证需返回字符串"OK"
+
+错误代码需返回 capcode 从1开始编号
+
+NOTE: 如果主站使用了vercel，CloudFlareWorker 会去 fetch vercel。建议使用 workers.dev。
 
 #### 攻击频率 12/15min all ip
 

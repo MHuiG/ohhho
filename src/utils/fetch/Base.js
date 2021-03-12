@@ -120,12 +120,8 @@ function FetchBase (root) {
           const item = new Bean()
           item.create(data)
           callback(item)
-        } else if (data.code) {
-          if (data.code == 601 || data.code == 602 || data.code == 603 || data.code == 604 || data.code == 605 || data.code == 607 || data.code == 608) {
-            getScript(`${root.conf.serverURL}/ChallengeCaptcha`)
-          } else {
-            root.error(data.code, data)
-          }
+        } else if (data.capcode) {
+          getScript(`${root.conf.serverURL}/ChallengeCaptcha`)
         } else {
           root.error(12138, data)
         }

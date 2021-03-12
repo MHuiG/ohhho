@@ -177,10 +177,23 @@ async function handleRequest(request) {
           return new Response("本站正遭受攻击，请稍后再试！", headers_init);
         }
         if(q.length>=10){
+          if(typeof CAPTCHAAPI != "undefined"){
+            let sc=await fetch(new Request(CAPTCHAAPI+"/CheckChallengeCaptcha?accesstoken="+body.accesstoken, {
+              method: "GET",
+              headers: {
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+              },
+            }));
+            sc=await sc.text()
+            if(sc!="OK"){
+              return new Response(sc, headers_init);
+            }
+        }else{
           let ans=await checkAT(body.accesstoken,privatek,privatepass)
           if(ans!=true){
             return ans
           }
+        }
         }
         if(q.length>=12){
           let wait_attack=await OHHHO.get("ohhho_attack")
@@ -258,13 +271,15 @@ async function handleRequest(request) {
         }
         await OHHHO.put(Item.url,JSON.stringify(ls))
         try{
-          await fetch(new Request(APIPATH, {
-            method: "POST",
-            headers: {
-              "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
-            },
-            body: JSON.stringify(Item)
-          }));
+          if(typeof APIPATH != "undefined"){
+            await fetch(new Request(APIPATH, {
+              method: "POST",
+              headers: {
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+              },
+              body: JSON.stringify(Item)
+            }));
+          }
         }catch(e){}
         const meta = await OHHHO.get("meta")
         let lm=[]
@@ -360,6 +375,7 @@ async function handleRequest(request) {
       let capi=await GetCapJson()
       capi=capi["0"]
       const id = randomNum(0,10185)
+      // const id = 0  //test
       let _CAP = {
         RefreshToken: RToken,
         capque : capi[id][1],
@@ -388,13 +404,23 @@ async function handleRequest(request) {
       }
     }
     if (path.startsWith("/ChallengeCaptcha")) {
+      if(typeof CAPTCHAAPI != "undefined"){
+          let sc=await fetch(new Request(CAPTCHAAPI+"/ChallengeCaptchaScript", {
+            method: "GET",
+            headers: {
+              "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+            },
+          }));
+          sc=await sc.text()
+          return new Response(sc, headers_init);
+      }
       return new Response(ScriptChallenge, headers_init);
     }
     /*********************************************************************************************** */
     return new Response("Hello world", headers_init);
   } catch (e) {
     console.log(e);
-    return new Response("error:"+e, {
+    return new Response("!!Error!!"+e, {
       headers: {
         "content-type": "text/html; charset=utf-8",
         "Access-Control-Allow-Origin": "*",
@@ -466,27 +492,42 @@ var getIt = function(Item){
 /*********************************************************************************************** */
 // Captcha
 async function checkAT(AT,privatek,privatepass) {
-  if(AT=="undefined"){
-    return returnc(7)
-  }
-  const RefreshToken = await JSON.parse(Decrypt(AT, privatek));
-  let RToken = RefreshToken["RefreshToken"];
-
-  if (
-    checktime(await JSON.parse(Decrypt(RToken, privatek))) &&
-    checkban(RToken, privatek) &&
-    RefreshToken["privatepass"] == privatepass &&
-    RefreshToken["date"] < new Date().valueOf() + 5 * 60 &&
-    RefreshToken["date"] > new Date().valueOf() - 5 * 60
-  ) {
-    let banlist = (await JSON.parse(await OHHHO.get("_banrt"))) || [];
-    banlist.push(RefreshToken);
-    await OHHHO.put("_banrt", await JSON.stringify(banlist), {
-      expirationTtl: 5 * 60,
-    });
-    return true;
-  } else {
-    return returnc(7);
+  try{
+    if(AT=="undefined"){
+      return returnc(7)
+    }
+    //true表示在有效期内AccessToken永久有效
+    //false表示AccessToken在使用一次后就吊销
+    //吊销机制是：AT与CapID联系，CapID与RefreshToken联系
+    //checkAT将在第一次校验RT成功后将其吊销，参数实际上代表了是否校验RT吊销
+    let checkRT =  false
+    if(typeof CHECKRT != "undefined"){
+      checkRT =  CHECKRT
+    }
+    const RefreshToken = await JSON.parse(Decrypt(AT, privatek))
+    let RToken = RefreshToken["RefreshToken"]
+    const date = RefreshToken["date"]
+    const now = (new Date()).valueOf()
+    if (RefreshToken["privatepass"] == privatepass && now - 10 * 60000 < date && now + 10 * 60000 > date) {
+        let banlist = await JSON.parse(await OHHHO.get("_banrt")) || []
+        console.log(banlist)
+        if((checktime(await JSON.parse(Decrypt(RToken, privatek))) && await checkban(RToken)) || checkRT){
+          if(!banlist.includes(RToken)){
+            banlist.push(RToken)
+            await OHHHO.put("_banrt", await JSON.stringify(banlist), { expirationTtl: 5 * 60 })
+            }
+          return true
+        }else{
+          console.log("吊销的RT");
+          return  returnc(9)
+        }
+        
+    } else { 
+      console.log("过期的AT");
+      return  returnc(8)
+    }
+  }catch(e){
+    return new Response("!!CapError!!"+e, { headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" } })
   }
 }
 async function CheckCaptcha(RToken,privatek,recapq,recapans) {
@@ -548,10 +589,12 @@ function returnc(i) {
       "Capthca校验错误",
       "Capthca答案错误",
       "CapthcaID丢失",
-      "AccessToken校验失败"
+      "AccessToken校验失败",
+      "AccessToken已过期",
+      "AccessToken已吊销",
   ]
   const as = {
-      code: i+601,
+      capcode: i+1,
       msg: code[i] || "未知错误，请联系管理员"
   }
   const ans = JSON.stringify(as)
@@ -677,7 +720,7 @@ function Decrypt(str, pwd) {
   return unescape(enc_str);
 }
 const ScriptChallenge=`
-const script = document.createElement('style')
+var script = document.createElement('style')
 script.innerText=\`
 .captcha {
   color: var(--ohhho-mark-text);
@@ -874,12 +917,8 @@ function getaccesstoken () {
       recapans: document.getElementById('captcha-in').value
     },
     success: function (data) {
-      if (data.code) {
-        if (data.code == 601 || data.code == 602 || data.code == 603 || data.code == 604 || data.code == 605 || data.code == 607 || data.code == 608) {
-          getrefreshtoken()
-        } else {
-          window.MV.root.error(data.code, data)
-        }
+      if (data.capcode) {
+          window.MV.root.error(data.capcode, data)
       } else {
         window.MV.accesstoken = data
         window.MV.root.postComment(window.MV.root, window.MV.root.postComment.callback)
