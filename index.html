@@ -12,58 +12,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,Chrome=1">
     <title>A simple comment system.</title>
     <style>
-        html {
-            font-size: 14px;
-        }
         body {
             background-color: rgb(238, 238, 238);
             margin: 0;
         }
-        header {
-            background: #fff;
-        }
-        a {
-            color: #999;
-            text-decoration: none;
-            border-bottom: 1px dotted #dedede;
-        }
-        .logo {
-            display: inline-block;
-            height: 60px;
-            font-size: 24px;
-            line-height: 60px;
-            color: #4285f4;
-            vertical-align: base-line;
-        }
-        .sub {
-            font-size: 12px;
-            color: #9c9c9c;
-            padding: 0 5px;
-        }
-        .market {
-            background-color: #4285f4;
-            height: 398px;
-            position: absolute;
-            top: 60px;
-            width: 100%;
-            outline: none;
-            display: block;
-            z-index: -1;
-        }
         .container {
             padding: 0 80px;
         }
-        .placeholder {
-            height: 56px;
-        }
         @media screen and (max-width:720px) {
-            header {
-                text-align: center;
-            }
-            .sub {
-                display: block;
-                padding-bottom: 10px;
-            }
             .container {
                 padding: 0;
             }
@@ -79,40 +35,11 @@
             background: #fff;
             padding: 10px 30px 50px;
         }
-        .prolist {
-            padding: 10px 20px 20px 20px;
-            font-weight: 400;
-            font-size: 12px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Mirages Custom', 'Merriweather', 'Open Sans', "Segoe UI", Roboto, "PingFang SC", "Microsoft Yahei", "WenQuanYi Micro Hei", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", Helvetica, Arial, sans-serif;
-            line-height: 1.5;
-        }
-        blockquote {
-            margin: 10px 0;
-            padding: 0 1em;
-            color: #6a737d;
-            border-left: 0.25em solid #dfe2e5;
-        }
-        #github {
-            padding: 20px 0;
-        }
-        .copy {
-            line-height: 60px;
-            text-align: center;
-            font-size: 12px;
-            color: #9c9c9c;
-        }
     </style>
 	<script src="./dist/ohhho.min.js"></script>
 </head>
 
 <body>
-    <div class="market"></div>
-    <header>
-        <div class="container">
-            <a href="./" class="logo"></a>
-            <span class="sub">A simple comment system.</span>
-        </div>
-    </header>
     <div class="container">
         <div class="placeholder"></div>
         <div class="content">
