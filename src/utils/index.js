@@ -1,8 +1,6 @@
 import Config from './Config'
 import i18n from './i18n'
 import smile from './smile'
-import initStyle from './initStyle'
-import initLibs from './initLibs'
 import uploadImage from './uploadImage'
 import alert from './alert'
 import getCache from './getCache'
@@ -23,8 +21,6 @@ module.exports = {
   Config: Config,
   i18n: i18n,
   smile: smile,
-  initStyle: initStyle,
-  initLibs: initLibs,
   uploadImage: uploadImage,
   alert: alert,
   smileEvt: smileEvt,

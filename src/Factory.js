@@ -1,15 +1,16 @@
+import 'lazysizes'
 import body from './body'
 import util from './utils'
 import FetchBase from './utils/fetch/Base.js'
+window.autosize = require('autosize')
 const Factory = function (option) {
   const root = this
   try {
     root.conf = option
     if (!document.querySelectorAll(root.conf.el)[0]) return
     util.Config(root)
-    util.initStyle(root)
     util.i18n(root)
-    util.initLibs(root)
+    root.initCheck()
   } catch (e) { console.error(e) }
 }
 Factory.prototype.initCheck = function () {
