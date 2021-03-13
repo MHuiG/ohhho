@@ -68,7 +68,7 @@ async function handleRequest(request) {
       }
     }
     if(routeid){
-      await DeleteRouteId(routeid)
+      await DeleteRouteById(routeid)
     }
   }
 
@@ -935,6 +935,7 @@ addEventListener("scheduled", event => {
 /*********************************************************************************************** */
 async function handleScheduled(event) {
   await SecurityLevel("essentially_off")
+  await CreateRoute()
 }
 /*********************************************************************************************** */
 function SecurityLevel(lev) {
@@ -961,7 +962,17 @@ function Schedules(corn) {
     body: '[{"cron": "'+corn+'"}]'
   }));
 }
-function DeleteRouteId(id) {
+function GETRoutes() {
+  return fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/workers/routes", {
+    method: "GET",
+    headers: {
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+      "X-Auth-Email": AUTHEMAIL,
+      "X-Auth-Key": AUTHKEY,
+    },
+  }));
+}
+function DeleteRouteById(id) {
   return fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/workers/routes/"+id, {
     method: "DELETE",
     headers: {
@@ -969,6 +980,18 @@ function DeleteRouteId(id) {
       "X-Auth-Email": AUTHEMAIL,
       "X-Auth-Key": AUTHKEY,
     },
+  }));
+}
+function CreateRoute() {
+  return fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/workers/routes", {
+    method: "POST",
+    headers: {
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+      "X-Auth-Email": AUTHEMAIL,
+      "X-Auth-Key": AUTHKEY,
+      "Content-Type": "application/json",
+    },
+    body: '{"pattern":"'+WORKERROUTE+'","script":"'+WORKERNAME+'"}'
   }));
 }
 function GETAnalytics() {
@@ -979,16 +1002,6 @@ function GETAnalytics() {
       "X-Auth-Email": AUTHEMAIL,
       "X-Auth-Key": AUTHKEY,
     }
-  }));
-}
-function GETRoutes() {
-  return fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/workers/routes", {
-    method: "GET",
-    headers: {
-      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
-      "X-Auth-Email": AUTHEMAIL,
-      "X-Auth-Key": AUTHKEY,
-    },
   }));
 }
 function GETFilters() {
