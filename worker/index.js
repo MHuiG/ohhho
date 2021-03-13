@@ -31,10 +31,6 @@ function XSS (o) {
   })
 }
 
-addEventListener("fetch", (event) => {
-  event.respondWith(handleRequest(event.request));
-});
-
 async function handleRequest(request) {
   const req = request;
   const urlStr = req.url;
@@ -52,6 +48,31 @@ async function handleRequest(request) {
   const XRealIP=new Map(request.headers).get('x-real-ip')
   const privatek = PRIVATEK
   const privatepass = PRIVATEPASS
+  /************************************** */
+  // 安全检查
+  let analytics=await GETAnalytics()
+  let result=(await analytics.json()).result
+  if(result.totals.requests>30000){
+    await SecurityLevel("under_attack")
+    await Schedules("0 0 * * *")
+  }
+  if(result.totals.requests>35000){
+    let routes=await GETRoutes()
+    let routesresult=(await routes.json()).result
+    let routeid=0
+    for (let index = 0; index < routesresult.length; index++) {
+      const element = routesresult[index];
+      if(element.script==WORKERNAME){
+        routeid=element.id
+        break
+      }
+    }
+    if(routeid){
+      await DeleteRouteId(routeid)
+    }
+  }
+
+  /************************************** */
   try {
     if (path == "/favicon.ico") {
       return fetch("https://cdn.jsdelivr.net/npm/mhg@latest");
@@ -69,11 +90,7 @@ async function handleRequest(request) {
     }
     if (path.startsWith("/comment")) {
       if(request.method=="POST"){
-        const formData = await request.formData()
-        const body = {}
-        for (const entry of formData.entries()) {
-          body[entry[0]] = entry[1]
-        }
+        let body=await GetPostBody(request)
         body.ip = CFConnectingIP || XRealIP
         body.XForwardedFor = XForwardedFor
         body.CfIpcountry = CfIpcountry
@@ -93,13 +110,7 @@ async function handleRequest(request) {
         }
         let num=0
         for (const it of q) {
-         let itTime = new Date(it.time)
-         var dateDiff = p.time.getTime() - itTime.getTime();//时间差的毫秒数
-         var leave1=dateDiff%(24*3600*1000) //计算天数后剩余的毫秒数
-         //计算相差分钟数
-         var leave2=leave1%(3600*1000) //计算小时数后剩余的毫秒数
-         var minutes=Math.floor(leave2/(60*1000))//计算相差分钟数
-         
+         let minutes=GetTimeMinutes(p.time,new Date(it.time))
          if(minutes>15){
            // 移除过时数据
           var index = q.indexOf(it)
@@ -118,15 +129,7 @@ async function handleRequest(request) {
           // https://developers.cloudflare.com/firewall/api
           // https://developers.cloudflare.com/firewall/cf-firewall-rules
 
-          let filters = await fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/filters", {
-            method: "GET",
-            headers: {
-              "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
-              "X-Auth-Email": AUTHEMAIL,
-              "X-Auth-Key": AUTHKEY,
-              "Content-Type": "application/json",
-            },
-          }));
+          let filters = await GETFilters()
           let result=(await filters.json()).result
           let flag=0
           let i=0
@@ -199,11 +202,7 @@ async function handleRequest(request) {
           let wait_attack=await OHHHO.get("ohhho_attack")
           if(wait_attack){
             wait_attack=JSON.parse(wait_attack)
-            var dateDiff = new Date().getTime() - new Date(wait_attack.time).getTime();//时间差的毫秒数
-            var leave1=dateDiff%(24*3600*1000) //计算天数后剩余的毫秒数
-            //计算相差分钟数
-            var leave2=leave1%(3600*1000) //计算小时数后剩余的毫秒数
-            var minutes=Math.floor(leave2/(60*1000))//计算相差分钟数
+            var minutes=GetTimeMinutes(new Date(),new Date(wait_attack.time))
             if(minutes>1){
               await OHHHO.put("ohhho_attack",JSON.stringify({"time":new Date()}))
             }else{
@@ -214,16 +213,8 @@ async function handleRequest(request) {
           }
         }
         if(q.length>20){
-          await fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/settings/security_level", {
-            method: "PATCH",
-            headers: {
-              "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
-              "X-Auth-Email": AUTHEMAIL,
-              "X-Auth-Key": AUTHKEY,
-              "Content-Type": "application/json",
-            },
-            body: '{"value":"under_attack"}'
-          }));
+          await SecurityLevel("under_attack")
+          await Schedules("0 0 * * *")
           return new Response("本站正遭受攻击，请稍后再试！！", headers_init);
         }
 
@@ -933,3 +924,97 @@ function getaccesstoken () {
 getrefreshtoken()
 `
 /*********************************************************************************************** */
+// Fetch触发器
+addEventListener("fetch", (event) => {
+  event.respondWith(handleRequest(event.request));
+});
+// Cron触发器
+addEventListener("scheduled", event => {
+  event.waitUntil(handleScheduled(event))
+})
+/*********************************************************************************************** */
+async function handleScheduled(event) {
+  await SecurityLevel("essentially_off")
+}
+/*********************************************************************************************** */
+function SecurityLevel(lev) {
+  return fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/settings/security_level", {
+    method: "PATCH",
+    headers: {
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+      "X-Auth-Email": AUTHEMAIL,
+      "X-Auth-Key": AUTHKEY,
+      "Content-Type": "application/json",
+    },
+    body: '{"value":"'+lev+'"}'
+  }));
+}
+function Schedules(corn) {
+  return fetch(new Request("https://api.cloudflare.com/client/v4/accounts/"+ACCOUNTID+"/workers/scripts/"+WORKERNAME+"/schedules", {
+    method: "PUT",
+    headers: {
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+      "X-Auth-Email": AUTHEMAIL,
+      "X-Auth-Key": AUTHKEY,
+      "Content-Type": "application/json",
+    },
+    body: '[{"cron": "'+corn+'"}]'
+  }));
+}
+function DeleteRouteId(id) {
+  return fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/workers/routes/"+id, {
+    method: "DELETE",
+    headers: {
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+      "X-Auth-Email": AUTHEMAIL,
+      "X-Auth-Key": AUTHKEY,
+    },
+  }));
+}
+function GETAnalytics() {
+  return fetch(new Request("https://api.cloudflare.com/client/v4/accounts/"+ACCOUNTID+"/storage/analytics", {
+    method: "GET",
+    headers: {
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+      "X-Auth-Email": AUTHEMAIL,
+      "X-Auth-Key": AUTHKEY,
+    }
+  }));
+}
+function GETRoutes() {
+  return fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/workers/routes", {
+    method: "GET",
+    headers: {
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+      "X-Auth-Email": AUTHEMAIL,
+      "X-Auth-Key": AUTHKEY,
+    },
+  }));
+}
+function GETFilters() {
+  return fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/filters", {
+    method: "GET",
+    headers: {
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+      "X-Auth-Email": AUTHEMAIL,
+      "X-Auth-Key": AUTHKEY,
+      "Content-Type": "application/json",
+    },
+  }));
+}
+async function GetPostBody(request){
+  let formData = await request.formData()
+  let body = {}
+  for (let entry of formData.entries()) {
+    body[entry[0]] = entry[1]
+  }
+  return body
+}
+function GetTimeMinutes(a,b){
+  var dateDiff = a.getTime() - b.getTime();//时间差的毫秒数
+  var leave1=dateDiff%(24*3600*1000) //计算天数后剩余的毫秒数
+  //计算相差分钟数
+  var leave2=leave1%(3600*1000) //计算小时数后剩余的毫秒数
+  var minutes=Math.floor(leave2/(60*1000))//计算相差分钟数
+  return minutes
+}

@@ -48,7 +48,7 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.8/dist/ohhh.o.min.js.sig
 - 前端 JS 脚本无样式版共计一个（ohhh.o.min.js） 文件大小约为 45 KB。
 - CloudFlareWorker 脚本共计一个（worker.js）。
 - 系统关键请求共计3个。
-- 中国地区使用 CloudFlareAnycast 技术和 DNSPOD 智能解析技术 以及 优选 CloudFlare节点 IP 负载均衡的方法，系统关键请求时间可在 100-300ms 左右。
+- 系统关键请求时间可在 100-300ms 左右。
 
 # 安全策略
 
@@ -120,7 +120,21 @@ NOTE: 如果主站使用了vercel，CloudFlareWorker 会去 fetch vercel。建�
 
 #### 攻击频率 20/15min all ip
 
-全部IP15分钟内发送评论超过20条，Cloudflare 开启 Under Attack 模式且超过 20/15min all ip 的数据流不再存入。请注意这是自毁行为。
+全部IP15分钟内发送评论超过20条，Cloudflare 开启 Under Attack 模式且超过 20/15min all ip 的数据流不再存入；开启定时任务 UTC 00:00:00 关闭 Under Attack 模式。
+
+#### 攻击频率 30000/6h all ip all reqest all workers
+
+环境变量：
+
+`ACCOUNTID` : account_id 【必填】
+
+`WORKERNAME` : worker  script name 【必填】
+
+六小时内KV流量请求超过30000，Cloudflare 开启 Under Attack 模式；开启定时任务 UTC 00:00:00 关闭 Under Attack 模式。
+
+六小时内KV流量请求超过35000，将删除本内核 Worker Script 路由。
+
+请注意这是自我销毁行为。
 
 ### 文档
 
