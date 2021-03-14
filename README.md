@@ -170,6 +170,22 @@ Cloudflare  防火墙 API文档：
 
 目前代码处于可用或不可用状态，不提供任何担保。
 
+# 大事记
+
+2021.03.14 内核完成第一版安全策略部署
+
+2021.03.07 内核首次实现基于 CloudFlareKV 的存储方案
+
+2021.03.06 内核发布第一个~不可用~版本
+
+# 致谢
+
+本内核前端使用了 MiniValine 的核心部分，在此特别感谢所有参与 MiniValine 开发的贡献者，感谢 MiniValine V5 版本之前的 56⭐ users ~~V4的仓库被我误删了~~，感谢 MiniValine V5 版本之后的所有 Star Users。
+
+Thanks to [CloudFlare](https://www.cloudflare.com) for their support.
+
+<img src="https://www.cloudflare.com/img/logo-web-badges/cf-logo-on-white-bg.svg" width="300">
+
 # 许可
 
 使用严格的 GPL-3.0 开源许可（GPL-3.0 Only）,这意味着我们拒绝使用任何 GPL-2.0 Only 开源许可的源代码，同时拒绝向遵循 GPL-2.0 Only 的开源库提供授权；所有根据 **ohhho kernel** 开发的程序若重新分发，则必须遵循**GPLv3 或者其以后版**协议并开源。
@@ -192,3 +208,15 @@ Cloudflare  防火墙 API文档：
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ```
+
+## 授权链
+
+[ohhho kernel](https://github.com/MHuiG/ohhho) [2021.3.7](https://github.com/MHuiG/ohhho/tree/f8896843ee3dfb5c0b4213a0f7a57fa96b4d10ee)-present [GPL-3.0 Only](https://github.com/MHuiG/ohhho/blob/master/LICENSE)
+
+[MiniValine](https://github.com/MiniValine/MiniValine) [2020.3.10](https://github.com/MiniValine/MiniValine/tree/c572885421f5818b13931ba3023689897d41df16)-[2021](https://github.com/MiniValine/MiniValine/tree/e006726baf526478d890429b50c376b9e7c534a2) [GPLV3 or later](https://github.com/MiniValine/MiniValine/blob/e006726baf526478d890429b50c376b9e7c534a2/LICENSE)
+
+[Valine-Ex](https://github.com/DesertsP/Valine) [2017.8.13](https://github.com/DesertsP/Valine/tree/80caa2600f4cf92b84ec1b9815077748dd16dcbf)-[2019.5.28](https://github.com/DesertsP/Valine/tree/71090fed6e336ffded7d3e56f0909c8443c2bf8a)  [GPL-2.0 Only](https://github.com/DesertsP/Valine/blob/71090fed6e336ffded7d3e56f0909c8443c2bf8a/LICENSE)
+
+[Valine](https://github.com/xCss/Valine) [2017.8.3](https://github.com/xCss/Valine/tree/e1fb38559efa085866f531b473f4050001b97b83)-[2017.8.13](https://github.com/xCss/Valine/tree/cefd272eacdea665f20bc1eeeb18780984896eb2) [GPL-2.0 Only](https://github.com/xCss/Valine/blob/cefd272eacdea665f20bc1eeeb18780984896eb2/LICENSE)
+
+向以上开源项目以及贡献者致敬！
