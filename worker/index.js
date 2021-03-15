@@ -235,7 +235,16 @@ async function handleRequest(request) {
 
         let Item = toItem(body)
         let ls=[]
-        const c= await OHHHO.get(Item.url)
+        let c=null
+        if(typeof IPFSAPI != "undefined"){
+          let hash= await OHHHO.get("IPFS-"+Item.url) // KV / IPFS
+          if(hash){
+            c=await IPFSCat(hash)
+            c=await c.text()
+          }
+        }else{
+          c= await OHHHO.get(Item.url) // KV Only
+        }
         if(c){
           ls=JSON.parse(c)
           if(Item.rid){
@@ -260,7 +269,13 @@ async function handleRequest(request) {
         }else{
           ls.push(Item)
         }
-        await OHHHO.put(Item.url,JSON.stringify(ls))
+        if(typeof IPFSAPI != "undefined"){
+          let sc= await IPFSAdd(JSON.stringify(ls))
+          sc=await sc.json()
+          await OHHHO.put("IPFS-"+Item.url,sc.Hash) // KV / IPFS
+        }else{
+          await OHHHO.put(Item.url,JSON.stringify(ls)) // KV Only
+        }
         try{
           if(typeof APIPATH != "undefined"){
             await fetch(new Request(APIPATH, {
@@ -289,7 +304,16 @@ async function handleRequest(request) {
       }else if(request.method=="GET"){
         const type = urlObj.searchParams.get('type')
         const path = urlObj.searchParams.get('path')
-        const c= await OHHHO.get(path)
+        let c=null
+        if(typeof IPFSAPI != "undefined"){
+          let hash= await OHHHO.get("IPFS-"+path) // KV / IPFS
+          if(hash){
+            c=await IPFSCat(hash)
+            c=await c.text()
+          }
+        }else{
+          c= await OHHHO.get(path) // KV Only
+        }
         if(type=="count"){
           let num=0
           if(c){
@@ -406,6 +430,19 @@ async function handleRequest(request) {
           return new Response(sc, headers_init);
       }
       return new Response(ScriptChallenge, headers_init);
+    }
+    /*********************************************************************************************** */
+    // IPFS
+    if (path.startsWith("/ipfsadd")) {
+      let s= urlObj.searchParams.get('s')||"Hello World!"
+      let sc= await IPFSAdd(s)
+      sc=await sc.text()
+      return new Response(sc, headers_init);
+    }
+    if (path.startsWith("/ipfs")) {
+      const url = new URL(request.url)
+      url.hostname = "cloudflare-ipfs.com"
+      return await fetch(url.toString(), request)
     }
     /*********************************************************************************************** */
     return new Response("Hello world", headers_init);
@@ -1031,3 +1068,21 @@ function GetTimeMinutes(a,b){
   var minutes=Math.floor(leave2/(60*1000))//计算相差分钟数
   return minutes
 }
+async function IPFSAdd(s){
+ return await fetch(new Request(IPFSAPI+"/api/v0/add", {
+        method: "POST",
+        headers: {
+          "accept":"application/json",
+          "Content-Type":'multipart/form-data; boundary=----IPFS20363.283362394857.60938.67369538564',
+        },
+        body:`------IPFS20363.283362394857.60938.67369538564\r\n`+
+        `Content-Disposition: form-data; name="path"\r\n`+
+        `Content-Type: application/octet-stream\r\n\r\n`+
+        s+
+        `\r\n------IPFS20363.283362394857.60938.67369538564--`
+      }));
+}
+async function IPFSCat(hash){
+    return await fetch("https://cloudflare-ipfs.com/ipfs/"+hash)
+}
+/***************************************************************************************** */

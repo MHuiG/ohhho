@@ -7,7 +7,7 @@
 
 *****
 
-基于 CloudFlareWorker 和 CloudFlareKV 技术的评论系统内核实验项目。
+基于 CloudFlareWorker 和 CloudFlareKV/IPFS 技术的评论系统内核实验项目。
 
 ******
 
@@ -49,6 +49,23 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.9/dist/ohhh.o.min.js.sig
 - CloudFlareWorker 脚本共计一个（worker.js）。
 - 系统关键请求共计3个。
 - 系统关键请求时间可在 100-300ms 左右。
+
+
+# 存储方案
+
+## 仅 CloudFlareKV 存储
+
+1 GB 键值存储空间 | 100,000 每日键值读取 | 1000 每日键值写入/删除/清单 | 值的最大大小为25MB | 整个请求大小必须小于100兆字节
+
+## CloudFlareKV/IPFS 存储
+
+IPFS 存储最终数据，无限存储空间，CloudFlareKV 存储 IPFS Hash，数据上传至 IPFS 则不可删除
+
+### 环境变量
+
+`IPFSAPI` : IPFS API
+
+由于 CloudFlareWorkers 神奇的 405 BUG ，请用其他方式自行搭建 IPFS API
 
 # 安全策略
 
@@ -171,6 +188,8 @@ Cloudflare  防火墙 API文档：
 目前代码处于可用或不可用状态，不提供任何担保。
 
 # 大事记
+
+2021.03.15 内核首次实现 CloudFlareKV/IPFS 存储
 
 2021.03.14 内核完成第一版安全策略部署
 
