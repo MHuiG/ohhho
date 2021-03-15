@@ -28,19 +28,19 @@
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.9/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.10/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.9/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.10/worker/dist/worker.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.9/dist/ohhh.o.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.10/dist/ohhh.o.min.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.9/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.10/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.9/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.10/worker/dist/worker.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.9/dist/ohhh.o.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.10/dist/ohhh.o.min.js.sig
 
 # 参数和指标
 
@@ -65,7 +65,7 @@ IPFS 存储最终数据，无限存储空间，CloudFlareKV 存储 IPFS Hash，�
 
 `IPFSAPI` : IPFS API
 
-由于 CloudFlareWorkers 神奇的 405 BUG ，请用其他方式自行搭建 IPFS API
+由于 CloudFlareWorkers 神奇的 405 BUG ，请用其他方式自行搭建 IPFS API，基于 CloudFlareWorker 的 IPFS API 不可用（worker.dev除外）
 
 # 安全策略
 
