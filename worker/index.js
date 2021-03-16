@@ -1,7 +1,9 @@
 import md from "marked";
+import xss from 'xss'
 const md5 = require('blueimp-md5')
 const uaparser = require('ua-parser-js')
 const highligher = require('highlight.js')
+const crypto = require('crypto');
 
 md.setOptions({
   gfm: true,
@@ -15,7 +17,7 @@ md.setOptions({
     return highligher.highlightAuto(code).value;
   },
 });
-import xss from 'xss'
+
 function XSS (o) {
   return xss(o, {
     onIgnoreTagAttr (tag, name, value, isWhiteAttr) {
@@ -235,15 +237,19 @@ async function handleRequest(request) {
 
         let Item = toItem(body)
         let ls=[]
-        let c=null
+        let c=0
         if(typeof IPFSAPI != "undefined"){
           let hash= await OHHHO.get("IPFS-"+Item.url) // KV / IPFS
           if(hash){
             c=await IPFSCat(hash)
             c=await c.text()
+            c=DeCryptionAES(c)
           }
         }else{
           c= await OHHHO.get(Item.url) // KV Only
+          if(c){
+            c=DeCryptionAES(c)
+          }
         }
         if(c){
           ls=JSON.parse(c)
@@ -270,11 +276,11 @@ async function handleRequest(request) {
           ls.push(Item)
         }
         if(typeof IPFSAPI != "undefined"){
-          let sc= await IPFSAdd(JSON.stringify(ls))
+          let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(ls)))
           sc=await sc.json()
           await OHHHO.put("IPFS-"+Item.url,sc.Hash) // KV / IPFS
         }else{
-          await OHHHO.put(Item.url,JSON.stringify(ls)) // KV Only
+          await OHHHO.put(Item.url,EnCryptionAES(JSON.stringify(ls))) // KV Only
         }
         try{
           if(typeof APIPATH != "undefined"){
@@ -304,15 +310,19 @@ async function handleRequest(request) {
       }else if(request.method=="GET"){
         const type = urlObj.searchParams.get('type')
         const path = urlObj.searchParams.get('path')
-        let c=null
+        let c=0
         if(typeof IPFSAPI != "undefined"){
           let hash= await OHHHO.get("IPFS-"+path) // KV / IPFS
           if(hash){
             c=await IPFSCat(hash)
             c=await c.text()
+            c=DeCryptionAES(c)
           }
         }else{
           c= await OHHHO.get(path) // KV Only
+          if(c){
+            c=DeCryptionAES(c)
+          }
         }
         if(type=="count"){
           let num=0
@@ -1068,21 +1078,79 @@ function GetTimeMinutes(a,b){
   var minutes=Math.floor(leave2/(60*1000))//计算相差分钟数
   return minutes
 }
+// 下面这段 worker 函数全网首发，不堪回首
 async function IPFSAdd(s){
  return await fetch(new Request(IPFSAPI+"/api/v0/add", {
         method: "POST",
         headers: {
           "accept":"application/json",
-          "Content-Type":'multipart/form-data; boundary=----IPFS20363.283362394857.60938.67369538564',
+          "Content-Type":'multipart/form-data; boundary=----IPFSOHHHO20363.283362394857.60938.67369538564',
         },
-        body:`------IPFS20363.283362394857.60938.67369538564\r\n`+
+        body:`------IPFSOHHHO20363.283362394857.60938.67369538564\r\n`+
         `Content-Disposition: form-data; name="path"\r\n`+
         `Content-Type: application/octet-stream\r\n\r\n`+
         s+
-        `\r\n------IPFS20363.283362394857.60938.67369538564--`
+        `\r\n------IPFSOHHHO20363.283362394857.60938.67369538564--`
       }));
 }
 async function IPFSCat(hash){
     return await fetch("https://cloudflare-ipfs.com/ipfs/"+hash)
 }
 /***************************************************************************************** */
+/**
+ * AES加密的配置 
+ * 1.密钥 
+ * 2.偏移向量 
+ * 3.算法模式CBC 
+ * 4.补全值
+ */
+var AES_conf = {
+    key: getSecretKey(), //密钥
+    iv: getSecretKey(), //偏移向量
+    padding: 'PKCS7Padding' //补全值
+}
+
+/**
+ * 读取密钥key
+ */
+function getSecretKey(){
+    return AESKEY || "abcdabcdabcdabcd";
+}
+
+/**
+ * AES_128_CBC 加密 
+ * 128位 
+ * return base64
+ */
+function EnCryptionAES(data) {
+    let key = AES_conf.key;
+    let iv = AES_conf.iv;
+    // let padding = AES_conf.padding;
+
+    var cipherChunks = [];
+    var cipher = crypto.createCipheriv('aes-128-cbc', key, iv);
+    cipher.setAutoPadding(true);
+    cipherChunks.push(cipher.update(data, 'utf8', 'base64'));
+    cipherChunks.push(cipher.final('base64'));
+    return cipherChunks.join('');
+}
+
+/**
+ * 解密
+ * return utf8
+ */
+function DeCryptionAES(data){
+
+    let key = AES_conf.key;
+    let iv = AES_conf.iv;
+    // let padding = AES_conf.padding;
+
+    var cipherChunks = [];
+    var decipher = crypto.createDecipheriv('aes-128-cbc', key, iv);
+    decipher.setAutoPadding(true);
+    cipherChunks.push(decipher.update(data, 'base64', 'utf8'));
+    cipherChunks.push(decipher.final('utf8'));
+    return cipherChunks.join('');
+}
+
+

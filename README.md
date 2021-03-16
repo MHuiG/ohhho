@@ -28,19 +28,19 @@
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.10/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.11/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.10/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.11/worker/dist/worker.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.10/dist/ohhh.o.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.11/dist/ohhh.o.min.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.10/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.11/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.10/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.11/worker/dist/worker.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.10/dist/ohhh.o.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.11/dist/ohhh.o.min.js.sig
 
 # 参数和指标
 
@@ -51,7 +51,7 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.10/dist/ohhh.o.min.js.sig
 - 系统关键请求时间可在 100-300ms 左右。
 
 
-# 存储方案
+# 数据存储方案
 
 ## 仅 CloudFlareKV 存储
 
@@ -66,6 +66,15 @@ IPFS 存储最终数据，无限存储空间，CloudFlareKV 存储 IPFS Hash，�
 `IPFSAPI` : IPFS API
 
 由于 CloudFlareWorkers 神奇的 405 BUG ，请用其他方式自行搭建 IPFS API，基于 CloudFlareWorker 的 IPFS API 不可用（worker.dev除外）
+
+
+# 数据加密方案
+
+考虑到数据上传至 IPFS 的数据永远不可删除，于是对数据进行加密处理。
+
+### 环境变量
+
+`AESKEY` : 必须16位
 
 # 安全策略
 
@@ -189,7 +198,9 @@ Cloudflare  防火墙 API文档：
 
 # 大事记
 
-2021.03.15 内核首次实现 CloudFlareKV/IPFS 存储
+2021.03.16 内核部署数据加密方案
+
+2021.03.15 内核首次实现 CloudFlareKV/IPFS 存储方案
 
 2021.03.14 内核完成第一版安全策略部署
 
