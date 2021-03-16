@@ -11,5 +11,9 @@ const Config = function (root) {
   root.conf.path = root.conf.path || root.conf.pathname || location.pathname
   root.C.url = root.conf.path
   root.conf.serverURL = root.conf.serverURL.replace(/\/$/g, '')
+  root.conf.uploadImageURL = root.conf.uploadImageURL || 'https://pic.alexhchu.com/api/upload'
+  root.conf.uploadImageParse = root.conf.uploadImageParse || ((res) => {
+    return res.data.url
+  })
 }
 module.exports = Config

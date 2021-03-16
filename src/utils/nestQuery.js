@@ -14,6 +14,7 @@ const nestQuery = (root) => {
           showChildrenWrapper.setAttribute('style', 'display: block !important;')
           showChildrenWrapper.innerHTML = `<span class="vshow-children" rid="${_id}">${root.i18n.more}</span>`
           const showChildren = showChildrenWrapper.querySelector('.vshow-children')
+          typeof root.conf.PageLoaded === 'function' && root.conf.PageLoaded()
           dom.on('click', showChildren, (e) => {
             showChildrenWrapper.setAttribute('style', 'display: none !important;')
             root.nestQuery(vcard, -1000)

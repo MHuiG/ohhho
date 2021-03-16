@@ -295,14 +295,20 @@ async function handleRequest(request) {
         }catch(e){}
         const meta = await OHHHO.get("meta")
         let lm=[]
+        let itmeta=""
+        if(typeof IPFSAPI != "undefined"){
+          itmeta= "IPFS-"+Item.url // KV / IPFS
+        }else{
+          itmeta= Item.url // KV Only
+        }
         if(meta){
           lm=JSON.parse(meta)
-          var index = lm.indexOf(Item.url)
+          var index = lm.indexOf(itmeta)
           if (index == -1) {
-            lm.push(Item.url)
+            lm.push(itmeta)
           }
         }else{
-          lm.push(Item.url)
+          lm.push(itmeta)
         }
         await OHHHO.put("meta",JSON.stringify(lm))
         let it = getIt(Item)

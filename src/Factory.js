@@ -60,6 +60,8 @@ Factory.prototype.Start = function () {
     util.submitBtnEvt(root)
     util.smile(root)
     window.MV.root = root
+    window.MV.util = util
+    typeof root.conf.FinishLoaded === 'function' && root.conf.FinishLoaded()
   } catch (e) { console.error(e) }
 }
 module.exports = Factory

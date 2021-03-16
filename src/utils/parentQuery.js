@@ -33,6 +33,7 @@ const parentQuery = (root) => {
           })
         }
       }
+      typeof root.conf.PageLoaded === 'function' && root.conf.PageLoaded()
       root.loading.hide(root.TotalPages)
     }
     root.fetchParentList(root, pageNum, callback)

@@ -13,6 +13,10 @@
 
 # About
 
+本项目是实验项目，正在进行一次前所未有的实验。
+
+本内核用于论证使用Cloudflare Workers构建无服务器应用程序并部署到Cloudflare的边缘网络；使用Cloudflare Workers KV全球分布式键值存储构建高度动态API；使用IPFS分布式文件系统实现去中心化分布式存储，搭建评论系统的可行性。
+
 本项目是内核项目，故我们只保留基础评论功能。
 
 我们拒绝了以下功能请求：
@@ -22,25 +26,25 @@
 - 主题支持（永远没有）
 - 评论管理系统
 - 任何移除后基础评论仍然正常的功能
-- 本项目文档（垃圾代码书写准则）
+- 本项目文档（遵循垃圾代码书写准则，从一开始就要保持）
 
 ## Releases
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.11/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.12/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.11/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.12/worker/dist/worker.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.11/dist/ohhh.o.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.12/dist/ohhh.o.min.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.11/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.12/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.11/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.12/worker/dist/worker.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.11/dist/ohhh.o.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.12/dist/ohhh.o.min.js.sig
 
 # 参数和指标
 
@@ -61,7 +65,7 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.11/dist/ohhh.o.min.js.sig
 
 ## CloudFlareKV/IPFS 存储
 
-IPFS 存储最终数据，无限存储空间，CloudFlareKV 存储 IPFS Hash，数据上传至 IPFS 则不可删除
+IPFS 存储最终数据，无限存储空间，CloudFlareKV 存储 IPFS Hash，数据上传至 IPFS 永远不可删除
 
 ### 环境变量
 
