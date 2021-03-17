@@ -52,7 +52,7 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.12/dist/ohhh.o.min.js.sig
 - 前端 JS 脚本无样式版共计一个（ohhh.o.min.js） 文件大小约为 45 KB。
 - CloudFlareWorker 脚本共计一个（worker.js）。
 - 系统关键请求共计3个。
-- 系统关键请求时间可在 100-300ms 左右。
+- 中国地区使用 CloudFlareAnycast 技术和 DNSPOD 智能解析技术 以及 优选 CloudFlare节点 IP 负载均衡的方法，系统关键请求时间可在 200-500ms 左右。
 
 
 # 数据存储方案
@@ -71,12 +71,12 @@ IPFS 存储最终数据，无限存储空间，CloudFlareKV 存储 IPFS Hash，�
 
 `IPFSAPI` : IPFS API
 
-由于 CloudFlareWorkers 神奇的 405 BUG ，请用其他方式自行搭建 IPFS API，基于 CloudFlareWorker 的 IPFS API 不可用（worker.dev除外）
+由于 CloudFlareWorkers 神奇的 405 BUG ，请用其他方式自行搭建 IPFS API，基于 CloudFlareWorker 的 IPFS API 不可用
 
 
 # 数据加密方案
 
-考虑到数据上传至 IPFS 的数据永远不可删除，于是对数据进行加密处理。
+考虑到数据上传至 IPFS 的数据永远不可删除，于是对数据进行加密处理。数据加密处理时间约为90ms。
 
 ### 环境变量
 
