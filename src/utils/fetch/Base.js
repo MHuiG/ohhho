@@ -102,7 +102,7 @@ function FetchBase (root) {
       accesstoken: window.MV.accesstoken
     }
     if (data.at) {
-      const parentNode = JSON.parse(window.atob(document.querySelector('#comment-' + item.rid + ' .comment-item').textContent))
+      const parentNode = JSON.parse(decodeURIComponent(window.atob(document.querySelector('#comment-' + item.rid + ' .comment-item').textContent)))
       if (parentNode.pid) {
         data.pid = parentNode.pid
       } else {

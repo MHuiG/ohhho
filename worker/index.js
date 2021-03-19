@@ -32,18 +32,44 @@ function XSS (o) {
     }
   })
 }
-
+function getCookie(request, name) {
+  let result = ""
+  const cookieString = request.headers.get("Cookie")
+  if (cookieString) {
+    const cookies = cookieString.split(";")
+    cookies.forEach(cookie => {
+      const cookiePair = cookie.split("=", 2)
+      const cookieName = cookiePair[0].trim()
+      if (cookieName === name) {
+        const cookieVal = cookiePair[1]
+        result = cookieVal
+      }
+    })
+  }
+  return result
+}
+let ohhho_logstatus=0
 async function handleRequest(request) {
   const req = request;
   const urlStr = req.url;
   const urlObj = new URL(urlStr);
   const path = urlObj.href.substr(urlObj.origin.length);
-  const headers_init = {
+  const headers_js = {
     headers: {
       "content-type": "application/javascript; charset=utf-8",
       "Access-Control-Allow-Origin": "*",
     },
   };
+  const headers_html = {
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "Access-Control-Allow-Origin": "*"
+  }};
+  const headers_json = {
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "Access-Control-Allow-Origin": "*"
+  }};
   const CFConnectingIP=request.headers.get("CF-Connecting-IP")
   const XForwardedFor=request.headers.get("X-Forwarded-For")
   const CfIpcountry=request.headers.get("Cf-Ipcountry")
@@ -87,7 +113,7 @@ async function handleRequest(request) {
           body[entry[0]] = entry[1]
         }
         const s = body.s
-        return new Response(md(XSS(s)), headers_init)
+        return new Response(md(XSS(s)), headers_js)
       }
     }
     if (path.startsWith("/comment")) {
@@ -179,7 +205,7 @@ async function handleRequest(request) {
               body: '[{"description": "OHHHO","action": "block","filter": {"expression": "'+expression+'","ref": "OHHHO"}}]'
             }));
           }
-          return new Response("本站正遭受攻击，请稍后再试！", headers_init);
+          return new Response("本站正遭受攻击，请稍后再试！", headers_js);
         }
         if(q.length>=10){
           if(typeof CAPTCHAAPI != "undefined"){
@@ -191,7 +217,7 @@ async function handleRequest(request) {
             }));
             sc=await sc.text()
             if(sc!="OK"){
-              return new Response(sc, headers_init);
+              return new Response(sc, headers_js);
             }
         }else{
           let ans=await checkAT(body.accesstoken,privatek,privatepass)
@@ -208,7 +234,7 @@ async function handleRequest(request) {
             if(minutes>1){
               await OHHHO.put("ohhho_attack",JSON.stringify({"time":new Date()}))
             }else{
-              return new Response("系统触发了防御机制-强制等待策略，请一分钟后重试！", headers_init);
+              return new Response("系统触发了防御机制-强制等待策略，请一分钟后重试！", headers_js);
             }
           }else{
             await OHHHO.put("ohhho_attack",JSON.stringify({"time":new Date()}))
@@ -217,7 +243,7 @@ async function handleRequest(request) {
         if(q.length>20){
           await SecurityLevel("under_attack")
           await Schedules("0 0 * * *")
-          return new Response("本站正遭受攻击，请稍后再试！！", headers_init);
+          return new Response("本站正遭受攻击，请稍后再试！！", headers_js);
         }
 
 
@@ -231,7 +257,7 @@ async function handleRequest(request) {
         var lc =body.nick?body.nick.length:0
         var ln = Math.max( la,lb,lc )
         if(ln>1000000){
-          return new Response("那太大了", headers_init);
+          return new Response("那太大了", headers_js);
         }
         /************************************** */
 
@@ -312,7 +338,7 @@ async function handleRequest(request) {
         }
         await OHHHO.put("meta",JSON.stringify(lm))
         let it = getIt(Item)
-        return new Response(JSON.stringify(it), headers_init)
+        return new Response(JSON.stringify(it), headers_js)
       }else if(request.method=="GET"){
         const type = urlObj.searchParams.get('type')
         const path = urlObj.searchParams.get('path')
@@ -336,7 +362,7 @@ async function handleRequest(request) {
             let ls=JSON.parse(c)
             num=ls.length
           }
-          return new Response(JSON.stringify(num), headers_init)
+          return new Response(JSON.stringify(num), headers_js)
         }else if(type=="totalPages"){
           const pageSize = urlObj.searchParams.get('pageSize')
           let num=0
@@ -344,7 +370,7 @@ async function handleRequest(request) {
             let ls=JSON.parse(c)
             num = Math.ceil(ls.length / pageSize)
           }
-          return new Response(JSON.stringify(num), headers_init)
+          return new Response(JSON.stringify(num), headers_js)
         }else{
           const pageSize = urlObj.searchParams.get('pageSize')
           const page = urlObj.searchParams.get('page')
@@ -354,6 +380,14 @@ async function handleRequest(request) {
             let p=[]
             for (let i = 0; i < num; i++) {
               let ele = getIt(ls[i]);
+              if(ele.children){
+                for (let j = 0; j < ele.children.length; j++) {
+                  const it = ele.children[j];
+                  if(!it.approval){
+                    ele.children.splice(j,1);
+                  }
+                }
+              }
               if(ele.approval){
                 p.push(ele)
               }
@@ -364,9 +398,9 @@ async function handleRequest(request) {
               const element = p[index];
               q.push(element)
             }
-            return new Response(JSON.stringify(q), headers_init)
+            return new Response(JSON.stringify(q), headers_js)
           }
-          return new Response(JSON.stringify({}), headers_init)
+          return new Response(JSON.stringify({}), headers_js)
         }
       }
     }
@@ -378,7 +412,7 @@ async function handleRequest(request) {
           salt: salt()
       }
       const RT = Encrypt(await JSON.stringify(_RT), privatek)
-      return new Response(RT, headers_init)
+      return new Response(RT, headers_js)
     }
     if (path.startsWith("/getaccesstoken")) {
       const RToken = urlObj.searchParams.get('refreshtoken')
@@ -395,7 +429,7 @@ async function handleRequest(request) {
           privatepass: privatepass
       }
       const AT = Encrypt(await JSON.stringify(_AccessToken), privatek)
-      return new Response(AT, headers_init)
+      return new Response(AT, headers_js)
   }
     if (path.startsWith("/getcap")) {
       let RToken=urlObj.searchParams.get('refreshtoken')
@@ -415,7 +449,7 @@ async function handleRequest(request) {
         salt:salt()
       }
       const recapq = Encrypt(await JSON.stringify(_CAP), privatek)
-      return new Response(recapq, headers_init)
+      return new Response(recapq, headers_js)
     }
     if (path.startsWith("/getimgcap")) {
       let ans=await CheckRT(urlObj.searchParams.get('refreshtoken'),privatek)
@@ -443,9 +477,9 @@ async function handleRequest(request) {
             },
           }));
           sc=await sc.text()
-          return new Response(sc, headers_init);
+          return new Response(sc, headers_js);
       }
-      return new Response(ScriptChallenge, headers_init);
+      return new Response(ScriptChallenge, headers_js);
     }
     /*********************************************************************************************** */
     // IPFS
@@ -453,7 +487,7 @@ async function handleRequest(request) {
       let s= urlObj.searchParams.get('s')||"Hello World!"
       let sc= await IPFSAdd(s)
       sc=await sc.text()
-      return new Response(sc, headers_init);
+      return new Response(sc, headers_js);
     }
     if (path.startsWith("/ipfs")) {
       const url = new URL(request.url)
@@ -461,15 +495,153 @@ async function handleRequest(request) {
       return await fetch(url.toString(), request)
     }
     /*********************************************************************************************** */
-    return new Response("Hello world", headers_init);
+    if (path.startsWith("/ohhho")) {
+      if (getCookie(request, "password") == md5(PASSWORD) && getCookie(request, "username") == md5(USERNAME)) {
+        ohhho_logstatus = 1
+      }else{
+        return new Response(Login_Page, headers_html)
+      }
+      if(!ohhho_logstatus){
+        return new Response(Login_Page, headers_html)
+      }
+      if (path.startsWith("/ohhho/dash")) {
+        return new Response(Dash_Page, headers_html)
+      }
+      if (path.startsWith("/ohhho/ListAll")) {
+        let meta= await OHHHO.get("meta")
+        let all=[]
+        if(meta){
+          let data
+          meta=JSON.parse(meta)
+          for (let index = 0; index < meta.length; index++) {
+            const element = meta[index];
+            let m =  await OHHHO.get(element)
+            if(element.startsWith("IPFS-")){
+              data = await IPFSCat(m)
+              data=await data.text()
+              data=DeCryptionAES(data)
+              data=JSON.parse(data)
+            }else{
+              data=DeCryptionAES(m)
+              data=JSON.parse(data)
+            }
+            for (let index = 0; index < data.length; index++) {
+              const element = data[index];
+              if(element.children){
+                for (let j = 0; j < element.children.length; j++) {
+                  const c = element.children[j];
+                  all.push(c)
+                }
+                element.children=[]
+              }
+              all.push(element)
+            }
+          }
+          all=all.sort(function(a, b) {
+            return b.createdAt < a.createdAt ? -1 : 1
+          })
+          return new Response(JSON.stringify(all), headers_js);
+        }
+      }
+      if (path.startsWith("/ohhho/NodeChange")) {
+        if(request.method=="POST"){
+          const formData = await request.formData()
+          const body = {}
+          for (const entry of formData.entries()) {
+            body[entry[0]] = entry[1]
+          }
+          let data=JSON.parse(body.data)
+          let c=0
+          if(typeof IPFSAPI != "undefined"){
+            let hash= await OHHHO.get("IPFS-"+data.url) // KV / IPFS
+            c=await IPFSCat(hash)
+            c=await c.text()
+          }else{
+            c= await OHHHO.get(data.url) // KV Only
+          }
+          c=DeCryptionAES(c)
+          c=JSON.parse(c)
+          for (let index = 0; index < c.length; index++) {
+            const element = c[index];
+            if (element.id==data.id) {
+              c.splice(index,1,data);
+              break
+            }
+            if (data.pid&&element.id==data.pid) {
+              for (let j = 0; j < element.children.length; j++) {
+                const ele = element.children[j];
+                if (ele.id==data.id) {
+                  if (ele.id==data.id) {
+                    element.children.splice(j,1,data);
+                    break
+                  }
+                }
+              }
+            }
+          }
+          if(typeof IPFSAPI != "undefined"){
+            let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(c)))
+            sc=await sc.json()
+            await OHHHO.put("IPFS-"+data.url,sc.Hash) // KV / IPFS
+          }else{
+            await OHHHO.put(data.url,EnCryptionAES(JSON.stringify(c))) // KV Only
+          }
+          return new Response(JSON.stringify(c), headers_json);
+        }
+      }
+      if (path.startsWith("/ohhho/NodeDel")) {
+        if(request.method=="POST"){
+          const formData = await request.formData()
+          const body = {}
+          for (const entry of formData.entries()) {
+            body[entry[0]] = entry[1]
+          }
+          let data=JSON.parse(body.data)
+          let c=0
+          if(typeof IPFSAPI != "undefined"){
+            let hash= await OHHHO.get("IPFS-"+data.url) // KV / IPFS
+            c=await IPFSCat(hash)
+            c=await c.text()
+          }else{
+            c= await OHHHO.get(data.url) // KV Only
+          }
+          c=DeCryptionAES(c)
+          c=JSON.parse(c)
+          for (let index = 0; index < c.length; index++) {
+            const element = c[index];
+            if (element.id==data.id) {
+              c.splice(index,1);
+              break
+            }
+            if (data.pid&&element.id==data.pid) {
+              for (let j = 0; j < element.children.length; j++) {
+                const ele = element.children[j];
+                if (ele.id==data.id) {
+                  if (ele.id==data.id) {
+                    element.children.splice(j,1);
+                    break
+                  }
+                }
+              }
+            }
+          }
+          if(typeof IPFSAPI != "undefined"){
+            let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(c)))
+            sc=await sc.json()
+            await OHHHO.put("IPFS-"+data.url,sc.Hash) // KV / IPFS
+          }else{
+            await OHHHO.put(data.url,EnCryptionAES(JSON.stringify(c))) // KV Only
+          }
+          return new Response(JSON.stringify(c), headers_json);
+        }
+      }
+      return Response.redirect(OHHHOPATH+"/ohhho/dash", 302)
+    }
+    /*********************************************************************************************** */
+    return new Response("Hello world", headers_js);
   } catch (e) {
     console.log(e);
-    return new Response("!!Error!!"+e, {
-      headers: {
-        "content-type": "text/html; charset=utf-8",
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
+    return new Response("!!Error!!"+e, headers_html);
   }
 }
 
@@ -1160,3 +1332,291 @@ function DeCryptionAES(data){
 }
 
 
+/********************************************************************************* */
+
+let Login_Page=`<!doctype html>
+<html lang="zh">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>OHHHO | LOGIN</title>
+	<style>
+*,*:after,*:before{box-sizing:border-box}html{position:relative;background:#03a9f4;font-family:'Roboto',sans-serif}.thumbur{width:150px;height:150px;position:relative;background-color:#efefef;*zoom:1;filter:progid:DXImageTransform.Microsoft.gradient(gradientType=1,startColorstr='#FFEFEFEF',endColorstr='#FFE1E1E1');background-image:url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4gPHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiBncmFkaWVudFVuaXRzPSJvYmplY3RCb3VuZGluZ0JveCIgeDE9IjAuMCIgeTE9IjAuNSIgeDI9IjEuMCIgeTI9IjAuNSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2VmZWZlZiIvPjxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjZWZlZmVmIi8+PHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9IiNlMWUxZTEiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNlMWUxZTEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyYWQpIiAvPjwvc3ZnPiA=');background-size:100%;background-image:-webkit-gradient(linear,0% 50%,100% 50%,color-stop(0%,#efefef),color-stop(50%,#efefef),color-stop(50%,#e1e1e1),color-stop(100%,#e1e1e1));background-image:-webkit-linear-gradient(left,#efefef 0,#efefef 50%,#e1e1e1 50%,#e1e1e1 100%);background-image:linear-gradient(to right,#efefef 0,#efefef 50%,#e1e1e1 50%,#e1e1e1 100%);margin:auto;border-radius:100%}.thumbur:before{content:'';position:absolute;width:6px;height:12px;background-color:#efefef;left:50%;bottom:50px;z-index:5;-ms-transform:translateX(-50%);-webkit-transform:translateX(-50%);transform:translateX(-50%);border-bottom-left-radius:2px;border-bottom-right-radius:2px}.icon-lock{position:relative;width:80px;height:60px;background:#ffa000;margin:auto;-ms-transform:translateY(60px);-webkit-transform:translateY(60px);transform:translateY(60px);border-radius:8px;box-shadow:0 0 2px #f57c00 inset}.icon-lock:after{content:'';position:absolute;width:50px;height:35px;border:9px solid #f57c00;border-bottom:0;bottom:100%;left:50%;-ms-transform:translateX(-50%);-webkit-transform:translateX(-50%);transform:translateX(-50%);border-top-left-radius:50px;border-top-right-radius:50px}.icon-lock:before{content:'';position:absolute;width:12px;height:12px;background-color:#efefef;left:50%;top:20px;-ms-transform:translateX(-50%);-webkit-transform:translateX(-50%);transform:translateX(-50%);border-radius:100%}.panel-lite{margin:20px auto;max-width:360px;background:#fff;padding:45px 20px;border-radius:4px;box-shadow:2px 2px 5px rgba(0,0,0,0.2);position:relative;margin-top:80px}.panel-lite h4{font-weight:400;font-size:24px;text-align:center;color:#03a9f4;margin:15px auto}.panel-lite a{display:inline-block;margin-top:25px;text-decoration:none;color:#03a9f4;font-size:14px}.form-group{position:relative;font-size:15px;color:#666}.form-group+.form-group{margin-top:30px}.form-group .form-label{position:absolute;z-index:1;left:0;top:5px;-webkit-transition:.3s;transition:.3s}.form-group .form-control{width:100%;position:relative;z-index:3;height:35px;background:0;border:0;padding:5px 0;-webkit-transition:.3s;transition:.3s;border-bottom:1px solid #777}.form-group .form-control:invalid{outline:0}.form-group .form-control:focus,.form-group .form-control:valid{outline:0;color:#03a9f4;box-shadow:0 1px #03a9f4;border-color:#03a9f4}.form-group .form-control:focus+.form-label,.form-group .form-control:valid+.form-label{font-size:12px;-ms-transform:translateY(-15px);-webkit-transform:translateY(-15px);transform:translateY(-15px)}.floating-btn{background:#03a9f4;width:60px;height:60px;border-radius:50%;color:#fff;font-size:32px;border:0;position:absolute;margin:auto;-webkit-transition:.3s;transition:.3s;box-shadow:1px 0 0 rgba(0,0,0,0.3) inset;margin:auto;right:-50px;bottom:3px;cursor:pointer}.floating-btn:hover{box-shadow:0 0 0 rgba(0,0,0,0.3) inset,0 3px 6px rgba(0,0,0,0.16),0 5px 11px rgba(0,0,0,0.23)}.floating-btn:hover .icon-arrow{-ms-transform:rotate(45deg) scale(1.2);-webkit-transform:rotate(45deg) scale(1.2);transform:rotate(45deg) scale(1.2)}.floating-btn:focus,.floating-btn:active{outline:0}.icon-arrow{position:relative;width:13px;height:13px;border-right:3px solid #fff;border-top:3px solid #fff;display:block;-ms-transform:rotate(45deg);-webkit-transform:rotate(45deg);transform:rotate(45deg);margin:auto;-webkit-transition:.3s;transition:.3s}.icon-arrow:after{content:'';position:absolute;width:18px;height:3px;background:#fff;left:-5px;top:5px;-ms-transform:rotate(-45deg);-webkit-transform:rotate(-45deg);transform:rotate(-45deg)}
+  </style>
+</head>
+<body>
+	<article class="htmleaf-container">
+		<div class="panel-lite">
+		  <div class="thumbur">
+		    <div class="icon-lock"></div>
+		  </div>
+		  <h4>用户登录</h4>
+		  <div class="form-group">
+		    <input id="username" required="required" class="form-control" value="" name="username"/>
+		    <label class="form-label">用户名</label>
+		  </div>
+		  <div class="form-group">
+		    <input id="password" type="password" required="required" class="form-control" value="" name="password"/>
+		    <label class="form-label">密　码</label>
+		  <button id="login-button" class="floating-btn"><i class="icon-arrow"></i></button>
+		</div>
+	</article>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.18.0/js/md5.min.js"></script>
+  <script>
+    $("#login-button").click(function(event) {
+      document.cookie = "username=" + md5(document.getElementById("username").value);
+      document.cookie = "password=" + md5(document.getElementById("password").value);
+      window.location.href = '/ohhho/dash';
+    });
+  </script>
+</body>
+</html>
+`
+
+let Dash_Page=`
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OHHHO | Dash</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/github.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.css" />
+    <style>
+      ::-webkit-scrollbar-track-piece {
+        background-color: #f8f8f8;
+      }
+      ::-webkit-scrollbar {
+        width: 9px;
+        height: 9px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: #ddd;
+        background-clip: padding-box;
+        min-height: 28px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: #bbb;
+      }
+      * {
+        padding: 0;
+        margin: 0;
+      }
+      .msvg{
+        -webkit-font-smoothing: antialiased;
+        display: inline-block;
+        font-style: normal;
+        font-weight: 400;
+        font-variant: normal;
+        text-rendering: auto;
+        line-height: 1.75em;
+        vertical-align:middle;
+        width: 1.2em;
+        height: 1.2em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mdui-container-fluid">
+      <div id="wrap" class="mdui-panel" mdui-panel>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"></script>
+    <script>
+      function List(){
+        $.ajax({
+        url: "/ohhho/ListAll",
+        type: "GET",
+        dataType:"json",
+        success: function (data) {
+          for (let index = 0; index < data.length; index++) {
+            const element = data[index];
+            AddOne(element)
+          }
+          $("#wrap :checkbox").click(function(){
+            let id=$(this).parents(".mdui-panel-item-open").attr('id')
+            const Node = JSON.parse(decodeURIComponent(window.atob(document.querySelector('#'+id + ' .data').textContent)))
+            $('#'+id+' .mdui-progress').css("display","block")
+            if(Node.approval){
+              Node.approval=false
+            }else{
+              Node.approval=true
+            }
+            document.querySelector('#'+id + ' .data').textContent=window.btoa(encodeURIComponent(JSON.stringify(Node)))
+            ChangeOne(Node)
+          });
+          $("#wrap textarea").on('blur',function(){
+            let id=$(this).parents(".mdui-panel-item-open").attr('id')
+            const Node = JSON.parse(decodeURIComponent(window.atob(document.querySelector('#'+id + ' .data').textContent)))
+            Node.commentHtml=$(this).val()     
+            $('#'+id+' .mdui-progress').css("display","block")
+            document.querySelector('#'+id + ' .data').textContent=window.btoa(encodeURIComponent(JSON.stringify(Node)))
+            ChangeOne(Node)
+          })
+          $("#wrap .del").on('click',function(){
+            let id=$(this).parents(".mdui-panel-item-open").attr('id')
+            const Node = JSON.parse(decodeURIComponent(window.atob(document.querySelector('#'+id + ' .data').textContent)))
+            $('#'+id+' .mdui-progress').css("display","block")
+            console.log(Node)
+            DelOne(Node)
+          })
+          $("#wrap .view").on('click',function(){
+            let id=$(this).parents(".mdui-panel-item-open").attr('id')
+            const Node = JSON.parse(decodeURIComponent(window.atob(document.querySelector('#'+id + ' .data').textContent)))
+            console.log(Node.url)
+            window.open(\`${SITEPATH}\${Node.url}\\#\${Node.id}\`,'_blank');  
+          })
+        },
+        error: function (data) {
+          console.log(data)
+        },
+      });
+      }
+      List()
+      function DelOne(node){
+        $.ajax({
+          url: "/ohhho/NodeDel",
+          type: "POST",
+          dataType:"json",
+          data:{"data":JSON.stringify(node)},
+          success: function (data) {
+            console.log(data)
+            $('#id-'+node.id+' .mdui-progress').css("display","none")
+            $('#id-'+node.id).remove()
+          },
+          error: function (data) {
+            console.log(data)
+          },
+        });
+      }
+      function ChangeOne(node){
+        $.ajax({
+          url: "/ohhho/NodeChange",
+          type: "POST",
+          dataType:"json",
+          data:{"data":JSON.stringify(node)},
+          success: function (data) {
+            console.log(data)
+            $('#id-'+node.id+' .mdui-progress').css("display","none")
+          },
+          error: function (data) {
+            console.log(data)
+          },
+        });
+      }
+      function AddOne(it){
+        let sd=ONE(it)
+        document.getElementById("wrap").innerHTML+=sd
+      }
+      function ONE(it){
+        let bnMeta=""
+        let bn=it.browser.name.toLowerCase()
+        if (bn) {
+          bnMeta += '<i><embed class="msvg" src="https://cdn.jsdelivr.net/npm/ohhho/imgs/svg/'
+          if (['mobile', 'samsung', 'samsung browser'].includes(bn)) {
+            bnMeta += 'mobile-alt'
+          } else if (['android', 'android browser'].includes(bn)) {
+            bnMeta += 'android'
+          } else if (['mobile safari', 'safari'].includes(bn)) {
+            bnMeta += 'safari'
+          } else if (['ie', 'iemobile'].includes(bn)) {
+            bnMeta += 'internet-explorer'
+          } else if (['wechat'].includes(bn)) {
+            bnMeta += 'weixin'
+          } else if (['qqbrowser', 'qqbrowserlite', 'qq'].includes(bn)) {
+            bnMeta += 'qq'
+          } else if (['baiduboxapp', 'baidu'].includes(bn)) {
+            bnMeta += 'paw'
+          } else if (['chrome', 'chromium', 'chrome headless', 'chrome webview'].includes(bn)) {
+            bnMeta += 'chrome'
+          } else if (['opera mobi', 'opera', 'opera coast', 'opera mini', 'opera tablet'].includes(bn)) {
+            bnMeta += 'opera'
+          } else if (['firefox', 'edge'].includes(bn)) {
+            bnMeta += bn
+          } else {
+            bnMeta += 'snapchat-ghost'
+          }
+          bnMeta += '.svg"/></i>'
+        } else {
+          bnMeta += '<i><embed class="msvg" src="https://cdn.jsdelivr.net/npm/ohhho/imgs/svg/stars.svg"/></i>'
+        }
+        let onMeta=""
+        let on=it.os.name.toLowerCase()
+        if (on) {
+          onMeta += '<i><embed class="msvg" src="https://cdn.jsdelivr.net/npm/ohhho/imgs/svg/'
+          if (['mac', 'mac os', 'ios'].includes(on)) {
+            onMeta += 'apple'
+          } else if (['chromium', 'chromium os'].includes(on)) {
+            onMeta += 'chrome'
+          } else if (['firefox', 'firefox os'].includes(on)) {
+            onMeta += 'firefox'
+          } else if (['windows phone', 'windows'].includes(on)) {
+            onMeta += 'windows'
+          } else if (['android', 'linux', 'ubuntu', 'suse', 'redhat', 'fedora', 'centos', 'blackberry'].includes(on)) {
+            onMeta += on
+          } else {
+            onMeta += 'snapchat-ghost'
+          }
+            onMeta += '.svg"/></i>'
+		
+        } else {
+          onMeta += '<i><embed class="msvg" src="https://cdn.jsdelivr.net/npm/ohhho/imgs/svg/magic.svg"/></i>'
+        }
+        sd= \`
+          <div id="id-\${it.id}" class="mdui-panel-item">
+            <div class="mdui-panel-item-header">
+              <div class="mdui-panel-item-title">
+                <div class="mdui-chip">
+                  <img class="mdui-chip-icon" src="https://cdn.v2ex.com/gravatar/\${it.mailMd5}?s=48&d=robohash"/>
+                  <span class="mdui-chip-title">\${it.nick}</span>
+                </div>
+              </div>
+              <div class="mdui-panel-item-summary">\${it.commentHtml}</div>
+              <i class="mdui-panel-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
+            </div>
+            <div class="mdui-panel-item-body">
+              <div class="mdui-card">
+                <div class="mdui-card-content">
+                    <img class="mdui-card-header-avatar" src="https://cdn.v2ex.com/gravatar/\${it.mailMd5}?s=48&d=robohash"/>
+                    <div class="mdui-card-header-title">\${it.nick}</div>
+                    <div class="mdui-card-header-subtitle"><i class="mdui-icon material-icons">&#xe192;</i>\${it.createdAt}</div>
+                    <div class="mdui-card-header-subtitle"><i class="mdui-icon material-icons">&#xe0be;</i>\${it.mail}</div>
+                    <div class="mdui-card-header-subtitle"><i class="mdui-icon material-icons">&#xe157;</i>\${it.link}</div>
+                    <div class="mdui-card-header-subtitle"><i class="mdui-icon material-icons">&#xe55f;</i>\${it.ip}</div>
+                    <div class="mdui-card-header-subtitle">\${bnMeta} \${it.browser.name} \${it.browser.version}</div>
+                    <div class="mdui-card-header-subtitle">\${onMeta} \${it.os.name} \${it.os.version}</div>
+                    <div class="mdui-card-header-subtitle"><i class="mdui-icon material-icons">&#xe85d;</i>\${it.ua}</div>
+                    <div class="mdui-card-content">\${it.commentHtml}</div>
+                </div>
+              </div>
+              <div class="mdui-panel-item-actions">
+                <div class="mdui-textfield mdui-textfield-floating-label">
+                  <textarea class="mdui-textfield-input">\${it.commentHtml}</textarea>
+                </div>
+                <label class="mdui-switch">
+                  批准
+                  <input type="checkbox" \${it.approval?"checked":""}/>
+                  <i class="mdui-switch-icon"></i>
+                </label>
+                <button class="mdui-btn mdui-ripple view">查看</button>
+                <button class="mdui-btn mdui-ripple del">删除</button>
+                <div class="mdui-progress" style="display:none">
+                  <div class="mdui-progress-indeterminate"></div>
+                </div>
+              </div>
+            </div>
+          <div class="data" style="display:none">\${window.btoa(encodeURIComponent(JSON.stringify(it)))}</div>
+          </div>
+        \`
+        return sd
+      }
+    </script>
+  </body>
+</html>
+
+`

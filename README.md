@@ -32,19 +32,19 @@
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.12/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.13/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.12/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.13/worker/dist/worker.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.12/dist/ohhh.o.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.13/dist/ohhh.o.min.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.12/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.13/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.12/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.13/worker/dist/worker.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.12/dist/ohhh.o.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.13/dist/ohhh.o.min.js.sig
 
 # 参数和指标
 
@@ -52,7 +52,7 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.12/dist/ohhh.o.min.js.sig
 - 前端 JS 脚本无样式版共计一个（ohhh.o.min.js） 文件大小约为 45 KB。
 - CloudFlareWorker 脚本共计一个（worker.js）。
 - 系统关键请求共计3个。
-- 中国地区使用 CloudFlareAnycast 技术和 DNSPOD 智能解析技术 以及 优选 CloudFlare节点 IP 负载均衡的方法，系统关键请求时间可在 200-500ms 左右。
+- ~~中国地区使用 CloudFlareAnycast 技术和 DNSPOD 智能解析技术 以及 优选 CloudFlare节点 IP 负载均衡的方法，~~系统关键请求时间可在 200-500ms 左右。
 
 
 # 数据存储方案
@@ -198,11 +198,25 @@ Cloudflare  防火墙 API文档：
 
 当前评论数据已完成存储后，向目标API地址发送包含当前评论数据的POST请求，供外部程序实现通知功能、垃圾评论检测等。
 
+# 简易管理系统
+
+环境变量：
+
+`SITEPATH`
+
+`USERNAME`
+
+`PASSWORD`
+
+`OHHHOPATH`
+
 # 如何使用
 
 目前代码处于可用或不可用状态，不提供任何担保。
 
 # 大事记
+
+2021.03.19 内核部署简易管理系统
 
 2021.03.16 内核部署数据加密方案
 

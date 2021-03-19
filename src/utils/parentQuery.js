@@ -12,7 +12,6 @@ const parentQuery = (root) => {
           if (i == 0) {
             root.loading.hide(root.TotalPages)
           }
-          if (rets[i].get('isSpam')) continue
           const parentVcard = root.insertComment(
             rets[i],
             root.el.querySelector('.vlist'),
