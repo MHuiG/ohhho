@@ -52,7 +52,7 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.13/dist/ohhh.o.min.js.sig
 - 前端 JS 脚本无样式版共计一个（ohhh.o.min.js） 文件大小约为 45 KB。
 - CloudFlareWorker 脚本共计一个（worker.js）。
 - 系统关键请求共计3个。
-- ~~中国地区使用 CloudFlareAnycast 技术和 DNSPOD 智能解析技术 以及 优选 CloudFlare节点 IP 负载均衡的方法，~~系统关键请求时间可在 200-500ms 左右。
+- ~~中国地区使用 CloudFlareAnycast 技术和 DNSPOD 智能解析技术 以及 优选 CloudFlare节点 IP 负载均衡的方法，~~ 系统关键请求时间可在 200-500ms 左右。
 
 
 # 数据存储方案
