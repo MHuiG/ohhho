@@ -1515,7 +1515,15 @@ let Dash_Page=`
       }
       function ONE(it){
         let bnMeta=""
-        let bn=it.browser.name.toLowerCase()
+        let onMeta=""
+        let bn=""
+        let on=""
+        try{
+          bn=it.browser.name.toLowerCase()
+        }catch(e){}
+        try{
+          on=it.os.name.toLowerCase()
+        }catch(e){}
         if (bn) {
           bnMeta += '<i><embed class="msvg" src="https://cdn.jsdelivr.net/npm/ohhho/imgs/svg/'
           if (['mobile', 'samsung', 'samsung browser'].includes(bn)) {
@@ -1545,8 +1553,7 @@ let Dash_Page=`
         } else {
           bnMeta += '<i><embed class="msvg" src="https://cdn.jsdelivr.net/npm/ohhho/imgs/svg/stars.svg"/></i>'
         }
-        let onMeta=""
-        let on=it.os.name.toLowerCase()
+        
         if (on) {
           onMeta += '<i><embed class="msvg" src="https://cdn.jsdelivr.net/npm/ohhho/imgs/svg/'
           if (['mac', 'mac os', 'ios'].includes(on)) {
