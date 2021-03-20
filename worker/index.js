@@ -128,43 +128,47 @@ async function handleRequest(event) {
       }else if(request.method=="GET"){
         const type = urlObj.searchParams.get('type')
         const path = urlObj.searchParams.get('path')
-        let c=0
-        if(typeof IPFSAPI != "undefined"){
-          let hash= await OHHHO.get("IPFS-"+path) // KV / IPFS
-          if(hash){
-            c=await IPFSCat(hash)
-            c=await c.text()
-            c=DeCryptionAES(c)
-          }
-        }else{
-          c= await OHHHO.get(path) // KV Only
-          if(c){
-            c=DeCryptionAES(c)
+        const metaLength = await OHHHO.get("metaLength")
+        let count=0
+        if(metaLength){
+          let ls=JSON.parse(metaLength)
+          if(typeof IPFSAPI != "undefined"){
+            if(ls["IPFS-"+path]){
+              count=ls["IPFS-"+path]
+            }
+          }else{
+            if(ls[path]){
+              count=ls[path]
+            }
           }
         }
         if(type=="count"){
-          let num=0
-          if(c){
-            let ls=JSON.parse(c)
-            num=ls.length
-          }
-          return new Response(JSON.stringify(num), headers_js)
+          return new Response(JSON.stringify(count), headers_js)
         }else if(type=="totalPages"){
           const pageSize = urlObj.searchParams.get('pageSize')
-          let num=0
-          if(c){
-            let ls=JSON.parse(c)
-            num = Math.ceil(ls.length / pageSize)
-          }
+          let num=Math.ceil(count / pageSize)
           return new Response(JSON.stringify(num), headers_js)
         }else{
           const pageSize = urlObj.searchParams.get('pageSize')
           const page = urlObj.searchParams.get('page')
+          let c=0
+          if(typeof IPFSAPI != "undefined"){
+            let hash= await OHHHO.get("IPFS-"+path) // KV / IPFS
+            if(hash){
+              c=await IPFSCat(hash)
+              c=await c.text()
+              c=DeCryptionAES(c)
+            }
+          }else{
+            c= await OHHHO.get(path) // KV Only
+            if(c){
+              c=DeCryptionAES(c)
+            }
+          }
           if(c){
             let ls=JSON.parse(c)
-            let num=ls.length
             let p=[]
-            for (let i = 0; i < num; i++) {
+            for (let i = 0; i < ls.length; i++) {
               let ele = getIt(ls[i]);
               if(ele.children){
                 for (let j = 0; j < ele.children.length; j++) {
@@ -411,12 +415,18 @@ async function handleRequest(event) {
               }
             }
           }
+          let metaLength = await OHHHO.get("metaLength")
+          metaLength=JSON.parse(metaLength)
           if(typeof IPFSAPI != "undefined"){
             let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(c)))
             sc=await sc.json()
             await OHHHO.put("IPFS-"+data.url,sc.Hash) // KV / IPFS
+            metaLength["IPFS-"+data.url]-=1
+            await OHHHO.put("metaLength",JSON.stringify(metaLength))
           }else{
             await OHHHO.put(data.url,EnCryptionAES(JSON.stringify(c))) // KV Only
+            metaLength[data.url]-=1
+            await OHHHO.put("metaLength",JSON.stringify(metaLength))
           }
           return new Response(JSON.stringify(c), headers_json);
         }
@@ -540,7 +550,9 @@ async function SaveComment(Item){
       await OHHHO.put(Item.url,EnCryptionAES(JSON.stringify(ls))) // KV Only
     }
     const meta = await OHHHO.get("meta")
+    const metaLength = await OHHHO.get("metaLength")
     let lm=[]
+    let lmle={}
     let itmeta=""
     if(typeof IPFSAPI != "undefined"){
       itmeta= "IPFS-"+Item.url // KV / IPFS
@@ -549,14 +561,20 @@ async function SaveComment(Item){
     }
     if(meta){
       lm=JSON.parse(meta)
+      lmle=JSON.parse(metaLength)
       var index = lm.indexOf(itmeta)
       if (index == -1) {
         lm.push(itmeta)
+        lmle[itmeta]=1
+      }else{
+        lmle[itmeta]+=1
       }
     }else{
       lm.push(itmeta)
+      lmle[itmeta]=1
     }
     await OHHHO.put("meta",JSON.stringify(lm))
+    await OHHHO.put("metaLength",JSON.stringify(lmle))
     try{
       if(typeof APIPATH != "undefined"){
         await fetch(new Request(APIPATH, {
