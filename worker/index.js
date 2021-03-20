@@ -48,58 +48,38 @@ function getCookie(request, name) {
   }
   return result
 }
+const headers_js = {
+  headers: {
+    "content-type": "application/javascript; charset=utf-8",
+    "Access-Control-Allow-Origin": "*",
+  },
+};
+const headers_html = {
+  headers: {
+    "content-type": "text/html; charset=utf-8",
+    "Access-Control-Allow-Origin": "*"
+}};
+const headers_json = {
+  headers: {
+    "content-type": "application/json; charset=utf-8",
+    "Access-Control-Allow-Origin": "*"
+}};
+const privatek = PRIVATEK
+const privatepass = PRIVATEPASS
 let ohhho_logstatus=0
-async function handleRequest(request) {
+async function handleRequest(event) {
+  const request = event.request;
   const req = request;
   const urlStr = req.url;
   const urlObj = new URL(urlStr);
   const path = urlObj.href.substr(urlObj.origin.length);
-  const headers_js = {
-    headers: {
-      "content-type": "application/javascript; charset=utf-8",
-      "Access-Control-Allow-Origin": "*",
-    },
-  };
-  const headers_html = {
-    headers: {
-      "content-type": "text/html; charset=utf-8",
-      "Access-Control-Allow-Origin": "*"
-  }};
-  const headers_json = {
-    headers: {
-      "content-type": "application/json; charset=utf-8",
-      "Access-Control-Allow-Origin": "*"
-  }};
   const CFConnectingIP=request.headers.get("CF-Connecting-IP")
   const XForwardedFor=request.headers.get("X-Forwarded-For")
   const CfIpcountry=request.headers.get("Cf-Ipcountry")
   const XRealIP=new Map(request.headers).get('x-real-ip')
-  const privatek = PRIVATEK
-  const privatepass = PRIVATEPASS
   /************************************** */
   // 安全检查
-  let analytics=await GETAnalytics()
-  let result=(await analytics.json()).result
-  if(result.totals.requests>30000){
-    await SecurityLevel("under_attack")
-    await Schedules("0 0 * * *")
-  }
-  if(result.totals.requests>35000){
-    let routes=await GETRoutes()
-    let routesresult=(await routes.json()).result
-    let routeid=0
-    for (let index = 0; index < routesresult.length; index++) {
-      const element = routesresult[index];
-      if(element.script==WORKERNAME){
-        routeid=element.id
-        break
-      }
-    }
-    if(routeid){
-      await DeleteRouteById(routeid)
-    }
-  }
-
+  event.waitUntil(securityCheckHead())
   /************************************** */
   try {
     if (path == "/favicon.ico") {
@@ -125,132 +105,12 @@ async function handleRequest(request) {
         /************************************** */
         // 检测 request  IP-Time
         // 15min
-        const now = new Date()
-        let p={}
-        p.ip=body.ip
-        p.XForwardedFor=body.XForwardedFor
-        p.CfIpcountry=body.CfIpcountry
-        p.time=new Date()
-        let q=[]
-        let IPTime=await OHHHO.get("IPTime")
-        if(IPTime){
-          q=JSON.parse(IPTime)
-        }
-        let num=0
-        for (const it of q) {
-         let minutes=GetTimeMinutes(p.time,new Date(it.time))
-         if(minutes>15){
-           // 移除过时数据
-          var index = q.indexOf(it)
-          if (index > -1) {
-            q.splice(index, 1);
-          }
-         }else{
-           if ((p.ip&&p.ip==it.ip)||(p.XForwardedFor&&p.XForwardedFor==it.XForwardedFor)) {
-             num++
-           }
-         }
-        }
-        if(num>15){
-          // Cloudflare API 防火墙规则
-          // https://api.cloudflare.com/#firewall-rules-properties
-          // https://developers.cloudflare.com/firewall/api
-          // https://developers.cloudflare.com/firewall/cf-firewall-rules
-
-          let filters = await GETFilters()
-          let result=(await filters.json()).result
-          let flag=0
-          let i=0
-          for(;i<result.length;i++){
-            if(result[i].ref&&result[i].ref=="OHHHO"){
-              flag=1
-              break
-            }
-          }
-          if(flag){
-            let item=result[i]
-            let expression = item.expression
-            if (p.ip) {
-              expression += " or (ip.src eq "+p.ip+")"
-            }
-            if (p.XForwardedFor) {
-              expression += " or (http.x_forwarded_for eq "+p.XForwardedFor+")"
-            }
-            item.expression=expression
-            await fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/filters", {
-              method: "PUT",
-              headers: {
-                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
-                "X-Auth-Email": AUTHEMAIL,
-                "X-Auth-Key": AUTHKEY,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify([item])
-            }));
-          }else{
-            let expression = "(ip.src eq 127.0.0.1)"
-            if (p.ip) {
-              expression = "(ip.src eq "+p.ip+")"
-            } else if (p.XForwardedFor) {
-              expression = "(http.x_forwarded_for eq "+p.XForwardedFor+")"
-            }
-            await fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/firewall/rules", {
-              method: "POST",
-              headers: {
-                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
-                "X-Auth-Email": AUTHEMAIL,
-                "X-Auth-Key": AUTHKEY,
-                "Content-Type": "application/json",
-              },
-              body: '[{"description": "OHHHO","action": "block","filter": {"expression": "'+expression+'","ref": "OHHHO"}}]'
-            }));
-          }
-          return new Response("本站正遭受攻击，请稍后再试！", headers_js);
-        }
-        if(q.length>=10){
-          if(typeof CAPTCHAAPI != "undefined"){
-            let sc=await fetch(new Request(CAPTCHAAPI+"/CheckChallengeCaptcha?accesstoken="+body.accesstoken, {
-              method: "GET",
-              headers: {
-                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
-              },
-            }));
-            sc=await sc.text()
-            if(sc!="OK"){
-              return new Response(sc, headers_js);
-            }
+        let ohhhho_under_attack=await OHHHO.get("ohhhho_under_attack")
+        if(ohhhho_under_attack){
+          return await securityCheckPost(body)
         }else{
-          let ans=await checkAT(body.accesstoken,privatek,privatepass)
-          if(ans!=true){
-            return ans
-          }
+          event.waitUntil(securityCheckPost(body))
         }
-        }
-        if(q.length>=12){
-          let wait_attack=await OHHHO.get("ohhho_attack")
-          if(wait_attack){
-            wait_attack=JSON.parse(wait_attack)
-            var minutes=GetTimeMinutes(new Date(),new Date(wait_attack.time))
-            if(minutes>1){
-              await OHHHO.put("ohhho_attack",JSON.stringify({"time":new Date()}))
-            }else{
-              return new Response("系统触发了防御机制-强制等待策略，请一分钟后重试！", headers_js);
-            }
-          }else{
-            await OHHHO.put("ohhho_attack",JSON.stringify({"time":new Date()}))
-          }
-        }
-        if(q.length>20){
-          await SecurityLevel("under_attack")
-          await Schedules("0 0 * * *")
-          return new Response("本站正遭受攻击，请稍后再试！！", headers_js);
-        }
-
-
-
-        q.push(p)
-        await OHHHO.put("IPTime",JSON.stringify(q))
-
         // 检测大文本攻击
         var la =body.comment?body.comment.length:0
         var lb =body.link?body.link.length:0
@@ -262,81 +122,7 @@ async function handleRequest(request) {
         /************************************** */
 
         let Item = toItem(body)
-        let ls=[]
-        let c=0
-        if(typeof IPFSAPI != "undefined"){
-          let hash= await OHHHO.get("IPFS-"+Item.url) // KV / IPFS
-          if(hash){
-            c=await IPFSCat(hash)
-            c=await c.text()
-            c=DeCryptionAES(c)
-          }
-        }else{
-          c= await OHHHO.get(Item.url) // KV Only
-          if(c){
-            c=DeCryptionAES(c)
-          }
-        }
-        if(c){
-          ls=JSON.parse(c)
-          if(Item.rid){
-            let children=[]
-            let index = 0
-            let element
-            for (; index < ls.length; index++) {
-              element = ls[index];
-              if(element.id==Item.pid){
-                if(element.children){
-                  children=element.children
-                }
-                children.push(Item)
-                element.children=children
-                ls[index]=element
-                break;
-              }
-            }
-          }else{
-            ls.push(Item)
-          }
-        }else{
-          ls.push(Item)
-        }
-        if(typeof IPFSAPI != "undefined"){
-          let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(ls)))
-          sc=await sc.json()
-          await OHHHO.put("IPFS-"+Item.url,sc.Hash) // KV / IPFS
-        }else{
-          await OHHHO.put(Item.url,EnCryptionAES(JSON.stringify(ls))) // KV Only
-        }
-        try{
-          if(typeof APIPATH != "undefined"){
-            await fetch(new Request(APIPATH, {
-              method: "POST",
-              headers: {
-                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
-              },
-              body: JSON.stringify(Item)
-            }));
-          }
-        }catch(e){}
-        const meta = await OHHHO.get("meta")
-        let lm=[]
-        let itmeta=""
-        if(typeof IPFSAPI != "undefined"){
-          itmeta= "IPFS-"+Item.url // KV / IPFS
-        }else{
-          itmeta= Item.url // KV Only
-        }
-        if(meta){
-          lm=JSON.parse(meta)
-          var index = lm.indexOf(itmeta)
-          if (index == -1) {
-            lm.push(itmeta)
-          }
-        }else{
-          lm.push(itmeta)
-        }
-        await OHHHO.put("meta",JSON.stringify(lm))
+        event.waitUntil(SaveComment(Item))
         let it = getIt(Item)
         return new Response(JSON.stringify(it), headers_js)
       }else if(request.method=="GET"){
@@ -430,7 +216,7 @@ async function handleRequest(request) {
       }
       const AT = Encrypt(await JSON.stringify(_AccessToken), privatek)
       return new Response(AT, headers_js)
-  }
+    }
     if (path.startsWith("/getcap")) {
       let RToken=urlObj.searchParams.get('refreshtoken')
       let ans=await CheckRT(RToken,privatek)
@@ -704,6 +490,247 @@ var getIt = function(Item){
     it.children=p
   }
   return it
+}
+/*********************************************************************************************** */
+async function SaveComment(Item){
+    let ls=[]
+    let c=0
+    if(typeof IPFSAPI != "undefined"){
+      let hash= await OHHHO.get("IPFS-"+Item.url) // KV / IPFS
+      if(hash){
+        c=await IPFSCat(hash)
+        c=await c.text()
+        c=DeCryptionAES(c)
+      }
+    }else{
+      c= await OHHHO.get(Item.url) // KV Only
+      if(c){
+        c=DeCryptionAES(c)
+      }
+    }
+    if(c){
+      ls=JSON.parse(c)
+      if(Item.rid){
+        let children=[]
+        let index = 0
+        let element
+        for (; index < ls.length; index++) {
+          element = ls[index];
+          if(element.id==Item.pid){
+            if(element.children){
+              children=element.children
+            }
+            children.push(Item)
+            element.children=children
+            ls[index]=element
+            break;
+          }
+        }
+      }else{
+        ls.push(Item)
+      }
+    }else{
+      ls.push(Item)
+    }
+    if(typeof IPFSAPI != "undefined"){
+      let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(ls)))
+      sc=await sc.json()
+      await OHHHO.put("IPFS-"+Item.url,sc.Hash) // KV / IPFS
+    }else{
+      await OHHHO.put(Item.url,EnCryptionAES(JSON.stringify(ls))) // KV Only
+    }
+    const meta = await OHHHO.get("meta")
+    let lm=[]
+    let itmeta=""
+    if(typeof IPFSAPI != "undefined"){
+      itmeta= "IPFS-"+Item.url // KV / IPFS
+    }else{
+      itmeta= Item.url // KV Only
+    }
+    if(meta){
+      lm=JSON.parse(meta)
+      var index = lm.indexOf(itmeta)
+      if (index == -1) {
+        lm.push(itmeta)
+      }
+    }else{
+      lm.push(itmeta)
+    }
+    await OHHHO.put("meta",JSON.stringify(lm))
+    try{
+      if(typeof APIPATH != "undefined"){
+        await fetch(new Request(APIPATH, {
+          method: "POST",
+          headers: {
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+          },
+          body: JSON.stringify(Item)
+        }));
+      }
+    }catch(e){}
+}
+async function securityCheckHead(){
+  let analytics=await GETAnalytics()
+  let result=(await analytics.json()).result
+  if(result.totals.requests>30000){
+    await SecurityLevel("under_attack")
+    await Schedules("0 0 * * *")
+  }
+  if(result.totals.requests>35000){
+    let routes=await GETRoutes()
+    let routesresult=(await routes.json()).result
+    let routeid=0
+    for (let index = 0; index < routesresult.length; index++) {
+      const element = routesresult[index];
+      if(element.script==WORKERNAME){
+        routeid=element.id
+        break
+      }
+    }
+    if(routeid){
+      await DeleteRouteById(routeid)
+    }
+  }
+}
+async function securityCheckPost(body){
+  const now = new Date()
+  let p={}
+  p.ip=body.ip
+  p.XForwardedFor=body.XForwardedFor
+  p.CfIpcountry=body.CfIpcountry
+  p.time=new Date()
+  let q=[]
+  let IPTime=await OHHHO.get("IPTime")
+  if(IPTime){
+    q=JSON.parse(IPTime)
+  }
+  let num=0
+  for (const it of q) {
+   let minutes=GetTimeMinutes(p.time,new Date(it.time))
+   if(minutes>15){
+     // 移除过时数据
+    var index = q.indexOf(it)
+    if (index > -1) {
+      q.splice(index, 1);
+    }
+   }else{
+     if ((p.ip&&p.ip==it.ip)||(p.XForwardedFor&&p.XForwardedFor==it.XForwardedFor)) {
+       num++
+     }
+   }
+  }
+  if(num>15){
+    // Cloudflare API 防火墙规则
+    // https://api.cloudflare.com/#firewall-rules-properties
+    // https://developers.cloudflare.com/firewall/api
+    // https://developers.cloudflare.com/firewall/cf-firewall-rules
+
+    let filters = await GETFilters()
+    let result=(await filters.json()).result
+    let flag=0
+    let i=0
+    for(;i<result.length;i++){
+      if(result[i].ref&&result[i].ref=="OHHHO"){
+        flag=1
+        break
+      }
+    }
+    if(flag){
+      let item=result[i]
+      let expression = item.expression
+      if (p.ip) {
+        expression += " or (ip.src eq "+p.ip+")"
+      }
+      if (p.XForwardedFor) {
+        expression += " or (http.x_forwarded_for eq "+p.XForwardedFor+")"
+      }
+      item.expression=expression
+      await fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/filters", {
+        method: "PUT",
+        headers: {
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+          "X-Auth-Email": AUTHEMAIL,
+          "X-Auth-Key": AUTHKEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify([item])
+      }));
+    }else{
+      let expression = "(ip.src eq 127.0.0.1)"
+      if (p.ip) {
+        expression = "(ip.src eq "+p.ip+")"
+      } else if (p.XForwardedFor) {
+        expression = "(http.x_forwarded_for eq "+p.XForwardedFor+")"
+      }
+      await fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/firewall/rules", {
+        method: "POST",
+        headers: {
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+          "X-Auth-Email": AUTHEMAIL,
+          "X-Auth-Key": AUTHKEY,
+          "Content-Type": "application/json",
+        },
+        body: '[{"description": "OHHHO","action": "block","filter": {"expression": "'+expression+'","ref": "OHHHO"}}]'
+      }));
+    }
+    let ohhhho_under_attack=await OHHHO.get("ohhhho_under_attack")
+    if(!ohhhho_under_attack){
+      await OHHHO.put("ohhhho_under_attack","1", { expirationTtl: 2 * 60 * 60 })
+    }
+    return new Response("本站正遭受攻击，请稍后再试！", headers_js);
+  }
+  if(q.length>=10){
+    if(typeof CAPTCHAAPI != "undefined"){
+      let sc=await fetch(new Request(CAPTCHAAPI+"/CheckChallengeCaptcha?accesstoken="+body.accesstoken, {
+        method: "GET",
+        headers: {
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+        },
+      }));
+      sc=await sc.text()
+      if(sc!="OK"){
+        let ohhhho_under_attack=await OHHHO.get("ohhhho_under_attack")
+        if(!ohhhho_under_attack){
+          await OHHHO.put("ohhhho_under_attack","1", { expirationTtl: 2 * 60 * 60 })
+        }
+        return new Response(sc, headers_js);
+      }
+  }else{
+    let ans=await checkAT(body.accesstoken,privatek,privatepass)
+    if(ans!=true){
+      return ans
+    }
+  }
+  }
+  if(q.length>=12){
+    let wait_attack=await OHHHO.get("ohhho_attack")
+    if(wait_attack){
+      wait_attack=JSON.parse(wait_attack)
+      var minutes=GetTimeMinutes(new Date(),new Date(wait_attack.time))
+      if(minutes>1){
+        await OHHHO.put("ohhho_attack",JSON.stringify({"time":new Date()}))
+      }else{
+        let ohhhho_under_attack=await OHHHO.get("ohhhho_under_attack")
+        if(!ohhhho_under_attack){
+          await OHHHO.put("ohhhho_under_attack","1", { expirationTtl:2 * 60 * 60 })
+        }
+        return new Response("系统触发了防御机制-强制等待策略，请一分钟后重试！", headers_js);
+      }
+    }else{
+      await OHHHO.put("ohhho_attack",JSON.stringify({"time":new Date()}))
+    }
+  }
+  if(q.length>20){
+    let ohhhho_under_attack=await OHHHO.get("ohhhho_under_attack")
+    if(!ohhhho_under_attack){
+      await OHHHO.put("ohhhho_under_attack","1", { expirationTtl: 24 * 60 * 60 })
+    }
+    await SecurityLevel("under_attack")
+    await Schedules("0 0 * * *")
+    return new Response("本站正遭受攻击，请稍后再试！！", headers_js);
+  }
+  q.push(p)
+  await OHHHO.put("IPTime",JSON.stringify(q))
 }
 /*********************************************************************************************** */
 // Captcha
@@ -1151,7 +1178,7 @@ getrefreshtoken()
 /*********************************************************************************************** */
 // Fetch触发器
 addEventListener("fetch", (event) => {
-  event.respondWith(handleRequest(event.request));
+  event.respondWith(handleRequest(event));
 });
 // Cron触发器
 addEventListener("scheduled", event => {
