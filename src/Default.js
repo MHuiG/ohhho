@@ -1,4 +1,4 @@
-export const VERSION = '0.0.15'
+export const VERSION = '0.0.16'
 export const MVUrl = 'https://cdn.jsdelivr.net/npm/ohhho@' + VERSION
 export const avatarUrl = 'https://cdn.v2ex.com/gravatar'
 export const avatarD = 'robohash'

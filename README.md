@@ -32,19 +32,19 @@
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.15/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.16/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.15/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.16/worker/dist/worker.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.15/dist/ohhh.o.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.16/dist/ohhh.o.min.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.15/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.16/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.15/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.16/worker/dist/worker.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.15/dist/ohhh.o.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.16/dist/ohhh.o.min.js.sig
 
 # 参数和指标
 
@@ -81,6 +81,8 @@ IPFS 存储最终数据，无限存储空间，CloudFlareKV 存储 IPFS Hash，�
 ### 环境变量
 
 `AESKEY` : 必须16位
+
+战备策略，此功能策略在 ohhho kernel 处于数据安全危机下将被强行启用。
 
 # 安全策略
 

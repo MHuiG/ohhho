@@ -128,23 +128,36 @@ async function handleRequest(event) {
       }else if(request.method=="GET"){
         const type = urlObj.searchParams.get('type')
         const path = urlObj.searchParams.get('path')
-        const metaLength = await OHHHO.get("metaLength")
-        let count=0
-        if(metaLength){
-          let ls=JSON.parse(metaLength)
-          if(typeof IPFSAPI != "undefined"){
-            if(ls["IPFS-"+path]){
-              count=ls["IPFS-"+path]
-            }
-          }else{
-            if(ls[path]){
-              count=ls[path]
+        let meta = await OHHHO.get("meta")
+        if(type=="count"){
+          let count=0
+          if(meta){
+            meta=JSON.parse(meta)
+            if(typeof IPFSAPI != "undefined"){
+              if(meta.sub["IPFS-"+path]){
+                count=meta.sub["IPFS-"+path].s
+              }
+            }else{
+              if(meta.sub[path]){
+                count=meta.sub[path].s
+              }
             }
           }
-        }
-        if(type=="count"){
           return new Response(JSON.stringify(count), headers_js)
         }else if(type=="totalPages"){
+          let count=0
+          if(meta){
+            meta=JSON.parse(meta)
+            if(typeof IPFSAPI != "undefined"){
+              if(meta.sub["IPFS-"+path]){
+                count=meta.sub["IPFS-"+path].f
+              }
+            }else{
+              if(meta.sub[path]){
+                count=meta.sub[path].f
+              }
+            }
+          }
           const pageSize = urlObj.searchParams.get('pageSize')
           let num=Math.ceil(count / pageSize)
           return new Response(JSON.stringify(num), headers_js)
@@ -303,8 +316,8 @@ async function handleRequest(event) {
         if(meta){
           let data
           meta=JSON.parse(meta)
-          for (let index = 0; index < meta.length; index++) {
-            const element = meta[index];
+          for (let index = 0; index < meta.key.length; index++) {
+            const element = meta.key[index];
             let m =  await OHHHO.get(element)
             if(element.startsWith("IPFS-")){
               data = await IPFSCat(m)
@@ -341,41 +354,7 @@ async function handleRequest(event) {
             body[entry[0]] = entry[1]
           }
           let data=JSON.parse(body.data)
-          let c=0
-          if(typeof IPFSAPI != "undefined"){
-            let hash= await OHHHO.get("IPFS-"+data.url) // KV / IPFS
-            c=await IPFSCat(hash)
-            c=await c.text()
-          }else{
-            c= await OHHHO.get(data.url) // KV Only
-          }
-          c=DeCryptionAES(c)
-          c=JSON.parse(c)
-          for (let index = 0; index < c.length; index++) {
-            const element = c[index];
-            if (element.id==data.id) {
-              c.splice(index,1,data);
-              break
-            }
-            if (data.pid&&element.id==data.pid) {
-              for (let j = 0; j < element.children.length; j++) {
-                const ele = element.children[j];
-                if (ele.id==data.id) {
-                  if (ele.id==data.id) {
-                    element.children.splice(j,1,data);
-                    break
-                  }
-                }
-              }
-            }
-          }
-          if(typeof IPFSAPI != "undefined"){
-            let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(c)))
-            sc=await sc.json()
-            await OHHHO.put("IPFS-"+data.url,sc.Hash) // KV / IPFS
-          }else{
-            await OHHHO.put(data.url,EnCryptionAES(JSON.stringify(c))) // KV Only
-          }
+          let c=await changeData(data)
           return new Response(JSON.stringify(c), headers_json);
         }
       }
@@ -387,47 +366,7 @@ async function handleRequest(event) {
             body[entry[0]] = entry[1]
           }
           let data=JSON.parse(body.data)
-          let c=0
-          if(typeof IPFSAPI != "undefined"){
-            let hash= await OHHHO.get("IPFS-"+data.url) // KV / IPFS
-            c=await IPFSCat(hash)
-            c=await c.text()
-          }else{
-            c= await OHHHO.get(data.url) // KV Only
-          }
-          c=DeCryptionAES(c)
-          c=JSON.parse(c)
-          for (let index = 0; index < c.length; index++) {
-            const element = c[index];
-            if (element.id==data.id) {
-              c.splice(index,1);
-              break
-            }
-            if (data.pid&&element.id==data.pid) {
-              for (let j = 0; j < element.children.length; j++) {
-                const ele = element.children[j];
-                if (ele.id==data.id) {
-                  if (ele.id==data.id) {
-                    element.children.splice(j,1);
-                    break
-                  }
-                }
-              }
-            }
-          }
-          let metaLength = await OHHHO.get("metaLength")
-          metaLength=JSON.parse(metaLength)
-          if(typeof IPFSAPI != "undefined"){
-            let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(c)))
-            sc=await sc.json()
-            await OHHHO.put("IPFS-"+data.url,sc.Hash) // KV / IPFS
-            metaLength["IPFS-"+data.url]-=1
-            await OHHHO.put("metaLength",JSON.stringify(metaLength))
-          }else{
-            await OHHHO.put(data.url,EnCryptionAES(JSON.stringify(c))) // KV Only
-            metaLength[data.url]-=1
-            await OHHHO.put("metaLength",JSON.stringify(metaLength))
-          }
+          let c=await deleteData(data)
           return new Response(JSON.stringify(c), headers_json);
         }
       }
@@ -502,6 +441,101 @@ var getIt = function(Item){
   return it
 }
 /*********************************************************************************************** */
+async function changeData(data){
+  let c=0
+  if(typeof IPFSAPI != "undefined"){
+    let hash= await OHHHO.get("IPFS-"+data.url) // KV / IPFS
+    c=await IPFSCat(hash)
+    c=await c.text()
+  }else{
+    c= await OHHHO.get(data.url) // KV Only
+  }
+  c=DeCryptionAES(c)
+  c=JSON.parse(c)
+  for (let index = 0; index < c.length; index++) {
+    const element = c[index];
+    if (element.id==data.id) {
+      c.splice(index,1,data);
+      break
+    }
+    if (data.pid&&element.id==data.pid) {
+      for (let j = 0; j < element.children.length; j++) {
+        const ele = element.children[j];
+        if (ele.id==data.id) {
+          if (ele.id==data.id) {
+            element.children.splice(j,1,data);
+            break
+          }
+        }
+      }
+    }
+  }
+  if(typeof IPFSAPI != "undefined"){
+    let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(c)))
+    sc=await sc.json()
+    await OHHHO.put("IPFS-"+data.url,sc.Hash) // KV / IPFS
+  }else{
+    await OHHHO.put(data.url,EnCryptionAES(JSON.stringify(c))) // KV Only
+  }
+  return c
+}
+async function deleteData(data){
+  let c=0
+  let cnum=0
+  if(typeof IPFSAPI != "undefined"){
+    let hash= await OHHHO.get("IPFS-"+data.url) // KV / IPFS
+    c=await IPFSCat(hash)
+    c=await c.text()
+  }else{
+    c= await OHHHO.get(data.url) // KV Only
+  }
+  c=DeCryptionAES(c)
+  c=JSON.parse(c)
+  for (let index = 0; index < c.length; index++) {
+    const element = c[index];
+    if (element.id==data.id) {
+      c.splice(index,1);
+      if(element.children)
+        cnum=element.children.length
+      break
+    }
+    if (data.pid&&element.id==data.pid) {
+      for (let j = 0; j < element.children.length; j++) {
+        const ele = element.children[j];
+        if (ele.id==data.id) {
+          if (ele.id==data.id) {
+            element.children.splice(j,1);
+            break
+          }
+        }
+      }
+    }
+  }
+  let meta = await OHHHO.get("meta")
+  meta=JSON.parse(meta)
+  if(typeof IPFSAPI != "undefined"){
+    let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(c)))
+    sc=await sc.json()
+    await OHHHO.put("IPFS-"+data.url,sc.Hash) // KV / IPFS
+    if (data.pid) {
+      meta.sub["IPFS-"+data.url].s-=1
+    }else{
+      meta.sub["IPFS-"+data.url].s-=(cnum+1)
+      meta.sub["IPFS-"+data.url].f-=1
+    }
+  }else{
+    await OHHHO.put(data.url,EnCryptionAES(JSON.stringify(c))) // KV Only
+    if (data.pid) {
+      meta.sub[data.url].s-=1
+    }else{
+      meta.sub[data.url].s-=(cnum+1)
+      meta.sub[data.url].f-=1
+    }
+  }
+  await OHHHO.put("meta",JSON.stringify(meta))
+  return c
+}
+/*********************************************************************************************** */
 async function SaveComment(Item){
     let ls=[]
     let c=0
@@ -550,9 +584,9 @@ async function SaveComment(Item){
       await OHHHO.put(Item.url,EnCryptionAES(JSON.stringify(ls))) // KV Only
     }
     const meta = await OHHHO.get("meta")
-    const metaLength = await OHHHO.get("metaLength")
-    let lm=[]
-    let lmle={}
+    let info={}
+    let key=[]
+    let sub={}
     let itmeta=""
     if(typeof IPFSAPI != "undefined"){
       itmeta= "IPFS-"+Item.url // KV / IPFS
@@ -560,21 +594,30 @@ async function SaveComment(Item){
       itmeta= Item.url // KV Only
     }
     if(meta){
-      lm=JSON.parse(meta)
-      lmle=JSON.parse(metaLength)
-      var index = lm.indexOf(itmeta)
+      info=JSON.parse(meta)
+      key= info.key
+      sub=info.sub
+      var index = key.indexOf(itmeta)
       if (index == -1) {
-        lm.push(itmeta)
-        lmle[itmeta]=1
+        key.push(itmeta)
+        sub[itmeta]={}
+        sub[itmeta].s=1
+        sub[itmeta].f=1
       }else{
-        lmle[itmeta]+=1
+        sub[itmeta].s+=1
+        if (!Item.pid) {
+          sub[itmeta].f+=1
+        }
       }
     }else{
-      lm.push(itmeta)
-      lmle[itmeta]=1
+      key.push(itmeta)
+      sub[itmeta]={}
+      sub[itmeta].s=1
+      sub[itmeta].f=1
     }
-    await OHHHO.put("meta",JSON.stringify(lm))
-    await OHHHO.put("metaLength",JSON.stringify(lmle))
+    info.key=key
+    info.sub=sub
+    await OHHHO.put("meta",JSON.stringify(info))
     try{
       if(typeof APIPATH != "undefined"){
         await fetch(new Request(APIPATH, {
@@ -1320,6 +1363,14 @@ async function IPFSCat(hash){
     return await fetch("https://cloudflare-ipfs.com/ipfs/"+hash)
 }
 /***************************************************************************************** */
+var AESVI = function(n) {
+  var str = "abcdefghijklmnopqrstuvwxyz0123456789";
+  var result = "";
+  for(var i = 0; i < n; i++) {
+      result += str[parseInt(Math.random() * str.length)];
+  }
+  return result;
+}
 /**
  * AES加密的配置 
  * 1.密钥 
@@ -1330,7 +1381,6 @@ async function IPFSCat(hash){
 var AES_conf = {
     key: getSecretKey(), //密钥
     iv: getSecretKey(), //偏移向量
-    padding: 'PKCS7Padding' //补全值
 }
 
 /**
@@ -1340,6 +1390,9 @@ function getSecretKey(){
     return AESKEY || "abcdabcdabcdabcd";
 }
 
+function getver(){
+  return "OHH0000";
+}
 /**
  * AES_128_CBC 加密 
  * 128位 
@@ -1348,14 +1401,19 @@ function getSecretKey(){
 function EnCryptionAES(data) {
     let key = AES_conf.key;
     let iv = AES_conf.iv;
-    // let padding = AES_conf.padding;
-
+    let ver = getver();
+    if(ver=="OHH0000"){
+      return data
+    }
+    if(ver=="OHH0001"){
+      iv = AESVI(16);
+    }
     var cipherChunks = [];
     var cipher = crypto.createCipheriv('aes-128-cbc', key, iv);
     cipher.setAutoPadding(true);
     cipherChunks.push(cipher.update(data, 'utf8', 'base64'));
     cipherChunks.push(cipher.final('base64'));
-    return cipherChunks.join('');
+    return ver+iv+cipherChunks.join('');
 }
 
 /**
@@ -1363,11 +1421,14 @@ function EnCryptionAES(data) {
  * return utf8
  */
 function DeCryptionAES(data){
-
     let key = AES_conf.key;
     let iv = AES_conf.iv;
-    // let padding = AES_conf.padding;
-
+    if(data.substr(0,7)=="OHH0001"){
+      iv = data.substr(7,16);
+      data = data.substr(23,data.length-23);
+    }else{
+      return data
+    }
     var cipherChunks = [];
     var decipher = crypto.createDecipheriv('aes-128-cbc', key, iv);
     decipher.setAutoPadding(true);
