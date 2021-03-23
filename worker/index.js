@@ -122,41 +122,23 @@ async function handleRequest(event) {
         /************************************** */
 
         let Item = toItem(body)
-        event.waitUntil(SaveComment(Item))
+        event.waitUntil(SaveComment(Item,body))
         let it = getIt(Item)
         return new Response(JSON.stringify(it), headers_js)
       }else if(request.method=="GET"){
         const type = urlObj.searchParams.get('type')
         const path = urlObj.searchParams.get('path')
-        let meta = await OHHHO.get("meta")
+        let meta = await GetMeta()
         if(type=="count"){
           let count=0
-          if(meta){
-            meta=JSON.parse(meta)
-            if(typeof IPFSAPI != "undefined"){
-              if(meta.sub["IPFS-"+path]){
-                count=meta.sub["IPFS-"+path].s
-              }
-            }else{
-              if(meta.sub[path]){
-                count=meta.sub[path].s
-              }
-            }
+          if(meta.sub[path]){
+            count=meta.sub[path].s
           }
           return new Response(JSON.stringify(count), headers_js)
         }else if(type=="totalPages"){
           let count=0
-          if(meta){
-            meta=JSON.parse(meta)
-            if(typeof IPFSAPI != "undefined"){
-              if(meta.sub["IPFS-"+path]){
-                count=meta.sub["IPFS-"+path].f
-              }
-            }else{
-              if(meta.sub[path]){
-                count=meta.sub[path].f
-              }
-            }
+          if(meta.sub[path]){
+            count=meta.sub[path].f
           }
           const pageSize = urlObj.searchParams.get('pageSize')
           let num=Math.ceil(count / pageSize)
@@ -165,18 +147,11 @@ async function handleRequest(event) {
           const pageSize = urlObj.searchParams.get('pageSize')
           const page = urlObj.searchParams.get('page')
           let c=0
-          if(typeof IPFSAPI != "undefined"){
-            let hash= await OHHHO.get("IPFS-"+path) // KV / IPFS
-            if(hash){
-              c=await IPFSCat(hash)
-              c=await c.text()
-              c=DeCryptionAES(c)
-            }
-          }else{
-            c= await OHHHO.get(path) // KV Only
-            if(c){
-              c=DeCryptionAES(c)
-            }
+          if(meta.sub[path]){
+            let hash= meta.sub[path].h
+            c=await IPFSCat(hash)
+            c=await c.text()
+            c=DeCryptionAES(c)
           }
           if(c){
             let ls=JSON.parse(c)
@@ -311,23 +286,18 @@ async function handleRequest(event) {
         return new Response(Dash_Page, headers_html)
       }
       if (path.startsWith("/ohhho/ListAll")) {
-        let meta= await OHHHO.get("meta")
+        let meta= await GetMeta()
         let all=[]
-        if(meta){
+       
           let data
-          meta=JSON.parse(meta)
           for (let index = 0; index < meta.key.length; index++) {
             const element = meta.key[index];
-            let m =  await OHHHO.get(element)
-            if(element.startsWith("IPFS-")){
-              data = await IPFSCat(m)
-              data=await data.text()
-              data=DeCryptionAES(data)
-              data=JSON.parse(data)
-            }else{
-              data=DeCryptionAES(m)
-              data=JSON.parse(data)
-            }
+            let m =  meta.sub[element].h
+            data = await IPFSCat(m)
+            data=await data.text()
+            data=DeCryptionAES(data)
+            data=JSON.parse(data)
+
             for (let index = 0; index < data.length; index++) {
               const element = data[index];
               if(element.children){
@@ -344,7 +314,7 @@ async function handleRequest(event) {
             return b.createdAt < a.createdAt ? -1 : 1
           })
           return new Response(JSON.stringify(all), headers_js);
-        }
+        
       }
       if (path.startsWith("/ohhho/NodeChange")) {
         if(request.method=="POST"){
@@ -442,14 +412,10 @@ var getIt = function(Item){
 }
 /*********************************************************************************************** */
 async function changeData(data){
-  let c=0
-  if(typeof IPFSAPI != "undefined"){
-    let hash= await OHHHO.get("IPFS-"+data.url) // KV / IPFS
-    c=await IPFSCat(hash)
-    c=await c.text()
-  }else{
-    c= await OHHHO.get(data.url) // KV Only
-  }
+  let meta=await GetMeta()
+  let hash= meta.sub[data.url].h
+  let c=await IPFSCat(hash)
+  c=await c.text()
   c=DeCryptionAES(c)
   c=JSON.parse(c)
   for (let index = 0; index < c.length; index++) {
@@ -470,25 +436,18 @@ async function changeData(data){
       }
     }
   }
-  if(typeof IPFSAPI != "undefined"){
-    let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(c)))
-    sc=await sc.json()
-    await OHHHO.put("IPFS-"+data.url,sc.Hash) // KV / IPFS
-  }else{
-    await OHHHO.put(data.url,EnCryptionAES(JSON.stringify(c))) // KV Only
-  }
+  let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(c)))
+  sc=await sc.json()
+  meta.sub[data.url].h=sc.Hash
+  await PutMeta(meta)
   return c
 }
 async function deleteData(data){
-  let c=0
   let cnum=0
-  if(typeof IPFSAPI != "undefined"){
-    let hash= await OHHHO.get("IPFS-"+data.url) // KV / IPFS
-    c=await IPFSCat(hash)
-    c=await c.text()
-  }else{
-    c= await OHHHO.get(data.url) // KV Only
-  }
+  let meta=await GetMeta()
+  let hash= meta.sub[data.url].h
+  let c=await IPFSCat(hash)
+  c=await c.text()
   c=DeCryptionAES(c)
   c=JSON.parse(c)
   for (let index = 0; index < c.length; index++) {
@@ -511,48 +470,29 @@ async function deleteData(data){
       }
     }
   }
-  let meta = await OHHHO.get("meta")
-  meta=JSON.parse(meta)
-  if(typeof IPFSAPI != "undefined"){
-    let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(c)))
-    sc=await sc.json()
-    await OHHHO.put("IPFS-"+data.url,sc.Hash) // KV / IPFS
-    if (data.pid) {
-      meta.sub["IPFS-"+data.url].s-=1
-    }else{
-      meta.sub["IPFS-"+data.url].s-=(cnum+1)
-      meta.sub["IPFS-"+data.url].f-=1
-    }
+
+  let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(c)))
+  sc=await sc.json()
+  meta.sub[data.url].h=sc.Hash
+  if (data.pid) {
+    meta.sub[data.url].s-=1
   }else{
-    await OHHHO.put(data.url,EnCryptionAES(JSON.stringify(c))) // KV Only
-    if (data.pid) {
-      meta.sub[data.url].s-=1
-    }else{
-      meta.sub[data.url].s-=(cnum+1)
-      meta.sub[data.url].f-=1
-    }
+    meta.sub[data.url].s-=(cnum+1)
+    meta.sub[data.url].f-=1
   }
-  await OHHHO.put("meta",JSON.stringify(meta))
+
+  await PutMeta(meta)
   return c
 }
 /*********************************************************************************************** */
-async function SaveComment(Item){
+async function SaveComment(Item,body){
     let ls=[]
-    let c=0
-    if(typeof IPFSAPI != "undefined"){
-      let hash= await OHHHO.get("IPFS-"+Item.url) // KV / IPFS
-      if(hash){
-        c=await IPFSCat(hash)
-        c=await c.text()
-        c=DeCryptionAES(c)
-      }
-    }else{
-      c= await OHHHO.get(Item.url) // KV Only
-      if(c){
-        c=DeCryptionAES(c)
-      }
-    }
-    if(c){
+    let meta= await GetMeta()
+    if(meta.key.indexOf(Item.url)!=-1){
+      let hash=meta.sub[Item.url].h
+      let c =await IPFSCat(hash)
+      c=await c.text()
+      c=DeCryptionAES(c)
       ls=JSON.parse(c)
       if(Item.rid){
         let children=[]
@@ -576,48 +516,39 @@ async function SaveComment(Item){
     }else{
       ls.push(Item)
     }
-    if(typeof IPFSAPI != "undefined"){
-      let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(ls)))
-      sc=await sc.json()
-      await OHHHO.put("IPFS-"+Item.url,sc.Hash) // KV / IPFS
+    let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(ls)))
+    sc=await sc.json()
+    let hash=sc.Hash
+    if(meta.key.indexOf(Item.url)==-1){
+      meta.key.push(Item.url)
+      meta.sub[Item.url]={}
+      meta.sub[Item.url].h=hash
+      meta.sub[Item.url].s=1
+      meta.sub[Item.url].f=1
     }else{
-      await OHHHO.put(Item.url,EnCryptionAES(JSON.stringify(ls))) // KV Only
-    }
-    const meta = await OHHHO.get("meta")
-    let info={}
-    let key=[]
-    let sub={}
-    let itmeta=""
-    if(typeof IPFSAPI != "undefined"){
-      itmeta= "IPFS-"+Item.url // KV / IPFS
-    }else{
-      itmeta= Item.url // KV Only
-    }
-    if(meta){
-      info=JSON.parse(meta)
-      key= info.key
-      sub=info.sub
-      var index = key.indexOf(itmeta)
-      if (index == -1) {
-        key.push(itmeta)
-        sub[itmeta]={}
-        sub[itmeta].s=1
-        sub[itmeta].f=1
-      }else{
-        sub[itmeta].s+=1
-        if (!Item.pid) {
-          sub[itmeta].f+=1
-        }
+      meta.sub[Item.url].h=hash
+      meta.sub[Item.url].s+=1
+      if (!Item.pid) {
+        meta.sub[Item.url].f+=1
       }
-    }else{
-      key.push(itmeta)
-      sub[itmeta]={}
-      sub[itmeta].s=1
-      sub[itmeta].f=1
     }
-    info.key=key
-    info.sub=sub
-    await OHHHO.put("meta",JSON.stringify(info))
+    let p={}
+    p.ip=body.ip
+    p.XForwardedFor=body.XForwardedFor
+    p.CfIpcountry=body.CfIpcountry
+    p.time=new Date()
+    for (const it of meta.sec.IPTime) {
+     let minutes=GetTimeMinutes(p.time,new Date(it.time))
+     if(minutes>15){
+       // 移除过时数据
+      var index = meta.sec.IPTime.indexOf(it)
+      if (index > -1) {
+        meta.sec.IPTime.splice(index, 1);
+      }
+     }
+    }
+    meta.sec.IPTime.push(p)
+    await PutMeta(meta)
     try{
       if(typeof APIPATH != "undefined"){
         await fetch(new Request(APIPATH, {
@@ -635,7 +566,7 @@ async function securityCheckHead(){
   let result=(await analytics.json()).result
   if(result.totals.requests>30000){
     await SecurityLevel("under_attack")
-    await Schedules("0 0 * * *")
+    await Schedules("0 21 * * *")
   }
   if(result.totals.requests>35000){
     let routes=await GETRoutes()
@@ -654,25 +585,21 @@ async function securityCheckHead(){
   }
 }
 async function securityCheckPost(body){
+  let meta=await GetMeta()
   const now = new Date()
   let p={}
   p.ip=body.ip
   p.XForwardedFor=body.XForwardedFor
   p.CfIpcountry=body.CfIpcountry
   p.time=new Date()
-  let q=[]
-  let IPTime=await OHHHO.get("IPTime")
-  if(IPTime){
-    q=JSON.parse(IPTime)
-  }
   let num=0
-  for (const it of q) {
+  for (const it of meta.sec.IPTime) {
    let minutes=GetTimeMinutes(p.time,new Date(it.time))
    if(minutes>15){
      // 移除过时数据
-    var index = q.indexOf(it)
+    var index = meta.sec.IPTime.indexOf(it)
     if (index > -1) {
-      q.splice(index, 1);
+      meta.sec.IPTime.splice(index, 1);
     }
    }else{
      if ((p.ip&&p.ip==it.ip)||(p.XForwardedFor&&p.XForwardedFor==it.XForwardedFor)) {
@@ -740,7 +667,11 @@ async function securityCheckPost(body){
     }
     return new Response("本站正遭受攻击，请稍后再试！", headers_js);
   }
-  if(q.length>=10){
+  if(meta.sec.IPTime.length>=10){
+    let ohhhho_under_attack=await OHHHO.get("ohhhho_under_attack")
+    if(!ohhhho_under_attack){
+      await OHHHO.put("ohhhho_under_attack","1", { expirationTtl: 2 * 60 * 60 })
+    }
     if(typeof CAPTCHAAPI != "undefined"){
       let sc=await fetch(new Request(CAPTCHAAPI+"/CheckChallengeCaptcha?accesstoken="+body.accesstoken, {
         method: "GET",
@@ -750,10 +681,6 @@ async function securityCheckPost(body){
       }));
       sc=await sc.text()
       if(sc!="OK"){
-        let ohhhho_under_attack=await OHHHO.get("ohhhho_under_attack")
-        if(!ohhhho_under_attack){
-          await OHHHO.put("ohhhho_under_attack","1", { expirationTtl: 2 * 60 * 60 })
-        }
         return new Response(sc, headers_js);
       }
   }else{
@@ -763,7 +690,7 @@ async function securityCheckPost(body){
     }
   }
   }
-  if(q.length>=12){
+  if(meta.sec.IPTime.length>=12){
     let wait_attack=await OHHHO.get("ohhho_attack")
     if(wait_attack){
       wait_attack=JSON.parse(wait_attack)
@@ -771,27 +698,17 @@ async function securityCheckPost(body){
       if(minutes>1){
         await OHHHO.put("ohhho_attack",JSON.stringify({"time":new Date()}))
       }else{
-        let ohhhho_under_attack=await OHHHO.get("ohhhho_under_attack")
-        if(!ohhhho_under_attack){
-          await OHHHO.put("ohhhho_under_attack","1", { expirationTtl:2 * 60 * 60 })
-        }
         return new Response("系统触发了防御机制-强制等待策略，请一分钟后重试！", headers_js);
       }
     }else{
       await OHHHO.put("ohhho_attack",JSON.stringify({"time":new Date()}))
     }
   }
-  if(q.length>20){
-    let ohhhho_under_attack=await OHHHO.get("ohhhho_under_attack")
-    if(!ohhhho_under_attack){
-      await OHHHO.put("ohhhho_under_attack","1", { expirationTtl: 24 * 60 * 60 })
-    }
+  if(meta.sec.IPTime.length>20){
     await SecurityLevel("under_attack")
-    await Schedules("0 0 * * *")
+    await Schedules("0 21 * * *")
     return new Response("本站正遭受攻击，请稍后再试！！", headers_js);
   }
-  q.push(p)
-  await OHHHO.put("IPTime",JSON.stringify(q))
 }
 /*********************************************************************************************** */
 // Captcha
@@ -1733,3 +1650,104 @@ let Dash_Page=`
 </html>
 
 `
+/************************************************* */
+/*
+{
+  "sec":{
+    "IPTime":[{"ip":"1.1.1.1","XForwardedFor":null,"CfIpcountry":"CN","time":"2021-03-23T01:57:37.076Z"}],
+  },
+  "key":["/"],
+  "sub":{
+    "/":{
+      "h":"QmSC2VmvGQ4864GSkW87U2UAGZa4QbCDAy2aChjwqNNHU123",
+      "s":2,
+      "f":2
+    },
+  }
+}
+*/
+async function PutMeta(meta){
+  let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(meta)))
+  sc=await sc.json()
+  await PutIPFSHash(sc.Hash)
+}
+async function GetMeta(){
+  let hash= await GetIPFSHash()
+  if(hash){
+    let c=await IPFSCat(hash)
+    c=await c.text()
+    c=DeCryptionAES(c)
+    return JSON.parse(c)
+  }
+  return {
+      "sec":{
+        "IPTime":[],
+      },
+      "key":[],
+      "sub":{
+      }
+    }
+}
+async function GetIPFSHash(){
+  let filters = await GETFilters()
+  let result=(await filters.json()).result
+  let flag=0
+  let i=0
+  for(;i<result.length;i++){
+    if(result[i].ref&&result[i].ref=="OHHHO"){
+      flag=1
+      break
+    }
+  }
+  if(flag){
+    let item=result[i]
+    let expression = item.expression
+    let res=expression.match(/OHHHO-IPFS-(.*)-OHHHO-IPFS/i)
+    if(res.length==2){
+      return res[1]
+    }
+  }
+  return 0
+}
+async function PutIPFSHash(IPFSHASH){
+  let filters = await GETFilters()
+  let result=(await filters.json()).result
+  let flag=0
+  let i=0
+  for(;i<result.length;i++){
+    if(result[i].ref&&result[i].ref=="OHHHO"){
+      flag=1
+      break
+    }
+  }
+  if(flag){
+    let item=result[i]
+    let expression = item.expression
+    let res=expression.match(/OHHHO-IPFS-(.*)-OHHHO-IPFS/i)
+    if(res.length==2){
+      item.expression=expression.replace(/OHHHO-IPFS-(.*)-OHHHO-IPFS/, "OHHHO-IPFS-"+IPFSHASH+"-OHHHO-IPFS")
+      return fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/filters", {
+        method: "PUT",
+        headers: {
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+          "X-Auth-Email": AUTHEMAIL,
+          "X-Auth-Key": AUTHKEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify([item])
+      }));
+    }
+  }
+  let expression = `(http.cookie eq \\"OHHHO-IPFS-${IPFSHASH}-OHHHO-IPFS\\")`
+  return fetch(new Request("https://api.cloudflare.com/client/v4/zones/"+ZONEID+"/firewall/rules", {
+    method: "POST",
+    headers: {
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36 Edg/88.0.100.0",
+      "X-Auth-Email": AUTHEMAIL,
+      "X-Auth-Key": AUTHKEY,
+      "Content-Type": "application/json",
+    },
+    body: '[{"description": "OHHHO","action": "block","filter": {"expression": "'+expression+'","ref": "OHHHO"}}]'
+  }));
+}
+/************************************************* */

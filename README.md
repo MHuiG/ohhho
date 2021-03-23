@@ -32,19 +32,19 @@
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.16/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.17/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.16/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.17/worker/dist/worker.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.16/dist/ohhh.o.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.17/dist/ohhh.o.min.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.16/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.17/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.16/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.17/worker/dist/worker.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.16/dist/ohhh.o.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.17/dist/ohhh.o.min.js.sig
 
 # 参数和指标
 
@@ -57,13 +57,15 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.16/dist/ohhh.o.min.js.sig
 
 # 数据存储方案
 
-请注意；提供的两个方案数据不是互通的，这是简化问题复杂度的设计原则。
+## 仅 IPFS 存储
 
-## 仅 CloudFlareKV 存储
+IPFS 存储最终数据，无限存储空间，数据上传至 IPFS 永远不可删除
+
+## 仅 CloudFlareKV 存储 (方案已废弃)
 
 1 GB 键值存储空间 | 100,000 每日键值读取 | 1000 每日键值写入/删除/清单 | 值的最大大小为25MB | 整个请求大小必须小于100兆字节
 
-## CloudFlareKV/IPFS 存储
+## CloudFlareKV/IPFS 存储 (方案已废弃)
 
 IPFS 存储最终数据，无限存储空间，CloudFlareKV 存储 IPFS Hash，数据上传至 IPFS 永远不可删除
 
@@ -160,11 +162,11 @@ NOTE: 如果主站使用了vercel，CloudFlareWorker 会去 fetch vercel。建�
 
 #### 攻击频率 20/15min all ip
 
-全部IP15分钟内发送评论超过20条，Cloudflare 开启 Under Attack 模式且超过 20/15min all ip 的数据流不再存入；开启定时任务 UTC 00:00:00 恢复正常模式。
+全部IP15分钟内发送评论超过20条，Cloudflare 开启 Under Attack 模式且超过 20/15min all ip 的数据流不再存入；开启定时任务 UTC 21:00:00 恢复正常模式。
 
 #### 攻击频率 30000/6h all ip all reqest all workers
 
-六小时内KV流量请求超过30000，Cloudflare 开启 Under Attack 模式；开启定时任务 UTC 00:00:00 恢复正常模式。
+六小时内KV流量请求超过30000，Cloudflare 开启 Under Attack 模式；开启定时任务 UTC 21:00:00 恢复正常模式。
 
 六小时内KV流量请求超过35000，将删除本内核 Worker Script 路由。
 
@@ -217,6 +219,8 @@ Cloudflare  防火墙 API文档：
 目前代码处于可用或不可用状态，不提供任何担保。
 
 # 大事记
+
+2021.03.23 内核首次实现完全 IPFS 存储，并移除旧有数据存储方案
 
 2021.03.19 内核部署简易管理系统
 

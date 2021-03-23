@@ -6,4 +6,5 @@ node_modules/
 coverage
 package-lock.json
 *.toml
+worker/worker/
 worker/wrangler.toml
