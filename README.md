@@ -32,19 +32,19 @@
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.17/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.18/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.17/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.18/worker/dist/worker.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.17/dist/ohhh.o.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.18/dist/ohhh.o.min.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.17/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.18/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.17/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.18/worker/dist/worker.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.17/dist/ohhh.o.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.18/dist/ohhh.o.min.js.sig
 
 # 参数和指标
 
@@ -57,15 +57,7 @@ https://cdn.jsdelivr.net/npm/ohhho@0.0.17/dist/ohhh.o.min.js.sig
 
 # 数据存储方案
 
-## 仅 IPFS 存储
-
-IPFS 存储最终数据，无限存储空间，数据上传至 IPFS 永远不可删除
-
-## 仅 CloudFlareKV 存储 (方案已废弃)
-
-1 GB 键值存储空间 | 100,000 每日键值读取 | 1000 每日键值写入/删除/清单 | 值的最大大小为25MB | 整个请求大小必须小于100兆字节
-
-## CloudFlareKV/IPFS 存储 (方案已废弃)
+## CloudFlareKV/IPFS 存储 (方案B)
 
 IPFS 存储最终数据，无限存储空间，CloudFlareKV 存储 IPFS Hash，数据上传至 IPFS 永远不可删除
 
@@ -75,6 +67,19 @@ IPFS 存储最终数据，无限存储空间，CloudFlareKV 存储 IPFS Hash，�
 
 由于 CloudFlareWorkers 神奇的 405 BUG ，请用其他方式自行搭建 IPFS API，基于 CloudFlareWorker 的 IPFS API 不可用
 
+## 仅 IPFS 存储 (方案已废弃)
+
+IPFS 存储最终数据，无限存储空间，数据上传至 IPFS 永远不可删除
+
+！！封号警告！！  [Is it OK to use WAF as CloudFlareWorkerKV?](https://community.cloudflare.com/t/is-it-ok-to-use-waf-as-cloudflareworkerkv/254887)
+
+## 仅 CloudFlareKV 存储 (方案已废弃)
+
+1 GB 键值存储空间 | 100,000 每日键值读取 | 1000 每日键值写入/删除/清单 | 值的最大大小为25MB | 整个请求大小必须小于100兆字节
+
+## CloudFlareKV/IPFS 存储 (方案A已废弃)
+
+IPFS 存储最终数据，无限存储空间，CloudFlareKV 存储 IPFS Hash
 
 # 数据加密方案
 
@@ -219,6 +224,8 @@ Cloudflare  防火墙 API文档：
 目前代码处于可用或不可用状态，不提供任何担保。
 
 # 大事记
+
+2021.03.25 内核部署 CloudFlareKV/IPFS 存储方案B,并废弃旧有数据存储方案
 
 2021.03.23 内核首次实现完全 IPFS 存储，并移除旧有数据存储方案
 

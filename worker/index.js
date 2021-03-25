@@ -1669,10 +1669,19 @@ let Dash_Page=`
 async function PutMeta(meta){
   let sc= await IPFSAdd(EnCryptionAES(JSON.stringify(meta)))
   sc=await sc.json()
-  await PutIPFSHash(sc.Hash)
+  if(typeof I_Understand_The_Risks != "undefined"){
+    await PutIPFSHash(sc.Hash)
+  }else{
+    await OHHHO.put("OHHHO_Hash",sc.Hash)
+  }
 }
 async function GetMeta(){
-  let hash= await GetIPFSHash()
+  let hash = 0
+  if(typeof I_Understand_The_Risks != "undefined"){
+    hash = await GetIPFSHash()
+  }else{
+    hash = await OHHHO.get("OHHHO_Hash")
+  }
   if(hash){
     let c=await IPFSCat(hash)
     c=await c.text()
