@@ -73,6 +73,8 @@ IPFS 存储最终数据，无限存储空间，数据上传至 IPFS 永远不可
 
 ！！封号警告！！  [Is it OK to use WAF as CloudFlareWorkerKV?](https://community.cloudflare.com/t/is-it-ok-to-use-waf-as-cloudflareworkerkv/254887)
 
+![](https://cdn.jsdelivr.net/gh/MHuiG/imgbed@master/data/1616675804000.png)
+
 ## 仅 CloudFlareKV 存储 (方案已废弃)
 
 1 GB 键值存储空间 | 100,000 每日键值读取 | 1000 每日键值写入/删除/清单 | 值的最大大小为25MB | 整个请求大小必须小于100兆字节
