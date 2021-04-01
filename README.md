@@ -32,19 +32,19 @@
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.18/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.19/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.18/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.19/worker/dist/worker.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.18/dist/ohhh.o.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.19/dist/ohhh.o.min.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.18/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.19/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.18/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.19/worker/dist/worker.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.18/dist/ohhh.o.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.19/dist/ohhh.o.min.js.sig
 
 # 参数和指标
 
@@ -161,7 +161,7 @@ IPFS 存储最终数据，无限存储空间，CloudFlareKV 存储 IPFS Hash
 
 错误代码需返回 capcode 从1开始编号
 
-NOTE: 如果主站使用了vercel，CloudFlareWorker 会去 fetch vercel。建议使用 workers.dev。
+NOTE: 建议使用 workers.dev。
 
 #### 攻击频率 12/15min all ip
 
@@ -226,6 +226,8 @@ Cloudflare  防火墙 API文档：
 目前代码处于可用或不可用状态，不提供任何担保。
 
 # 大事记
+
+2021.04.01 内核完成初步封装
 
 2021.03.25 内核部署 CloudFlareKV/IPFS 存储方案B,并废弃旧有数据存储方案
 
