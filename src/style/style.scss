@@ -1,34 +1,18 @@
 :root {
-  --ohhho-color: #3c484e;
   --ohhho-theme: #2196f3;
   --ohhho-activate: #ff5722;
-  --ohhho-a: #3eb0ef;
+  --ohhho-color-a: #3eb0ef;
+  --ohhho-color-p: #444;
+  --ohhho-color-card: #fff;
+  --ohhho-color-block: #f6f6f6;
+  --ohhho-color-text: #555;
+  --ohhho-color-meta: #bbb;
   --ohhho-wrap-border: rgba(85, 85, 85, 0.3);
   --ohhho-info-border: rgba(150, 150, 150, 0.08);
-  --ohhho-svg: #bbb;
-  --ohhho-svg-hover: #777777;
-  --ohhho-smile: #f6f6f6;
-  --ohhho-smile-hover: #fbfbfb;
-  --ohhho-text: #4b5b62;
-  --ohhho-text-border: #ededed;
-  --ohhho-text-focus: #c4c8cb;
-  --ohhho-btn: #fff;
-  --ohhho-btn-border: #e9eff3;
-  --ohhho-btn-background: #111;
-  --ohhho-btn-hover: #444;
-  --ohhho-sbmt: #555;
-  --ohhho-sbmt-hover: #ffeee8;
   --ohhho-mark-background: rgba(0, 0, 0, 0.65);
   --ohhho-mark-text: #fff;
-  --ohhho-mark-code: #dedede;
-  --ohhho-count: #555;
-  --ohhho-empty: #555;
-  --ohhho-more: #555;
-  --ohhho-more-background: #fafafa;
-  --ohhho-more-background-hover: #ffeee8;
   --ohhho-at: #2196f3;
   --ohhho-name: #ff9800;
-  --ohhho-time: #b3b3b3;
   --ohhho-expand-before-background: linear-gradient(
     180deg,
     rgba(246, 246, 246, 0),
@@ -36,8 +20,6 @@
   );
   --ohhho-expand-after-background: rgba(246, 246, 246, 0.9);
   --ohhho-expand-after-color: #828586;
-  --ohhho-smile-background: #f6f6f6;
-  --ohhho-smile-background-hover: #fbfbfb;
 }
 .ohhho {
   * {
@@ -48,7 +30,7 @@
       "sans-serif";
     font-weight: normal;
     line-height: 1.42857143;
-    color: var(--ohhho-color);
+    color: var(--ohhho-color-p);
     transition: all 0.3s ease;
     margin: initial;
     padding: initial;
@@ -73,10 +55,10 @@
   }
   .vcancel-comment-reply {
     cursor: pointer;
-    color: var(--ohhho-text);
+    color: var(--ohhho-color-text);
     text-decoration: underline;
     svg {
-      fill: var(--ohhho-svg);
+      fill: var(--ohhho-color-meta);
       margin-right: 5px;
       margin-top: 5px;
     }
@@ -127,13 +109,13 @@
         display: inline-block;
         margin: 10px;
         svg {
-          fill: var(--ohhho-svg);
+          fill: var(--ohhho-color-meta);
           cursor: pointer;
           &:hover {
-            fill: var(--ohhho-svg-hover);
+            fill: var(--ohhho-color-text);
           }
           &:active {
-            fill: var(--ohhho-svg-hover);
+            fill: var(--ohhho-color-text);
           }
         }
       }
@@ -178,16 +160,15 @@
       }
       .vsmile-icons {
         padding: 0.2em 0;
-        border-top: 1px solid var(--ohhho-mark-code);
         border-radius: 0;
         margin: 0.3em 0;
         max-height: 145px;
         overflow: auto;
-        background: var(--ohhho-smile-background);
+        background: var(--ohhho-color-block);
         border-radius: 4px;
         padding: 8px;
         img {
-          background: var(--ohhho-smile-background);
+          background: var(--ohhho-color-block);
           display: inline-block;
           width: auto !important;
           height: 28px !important;
@@ -198,7 +179,7 @@
           transition: box-shadow 0.2s ease-out, background 0.2s ease-out;
         }
         img:hover {
-          background: var(--ohhho-smile-background-hover);
+          background: var(--ohhho-color-card);
           box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1),
             -1px -1px 2px rgba(255, 255, 255, 0.5),
             inset 8px 8px 16px rgba(0, 0, 0, 0.05),
@@ -227,7 +208,7 @@
           cursor: pointer;
           margin-right: 3px;
           img {
-            background: var(--ohhho-smile-background);
+            background: var(--ohhho-color-block);
             display: inline-block;
             width: auto !important;
             height: 28px !important;
@@ -238,7 +219,7 @@
             transition: box-shadow 0.2s ease-out, background 0.2s ease-out;
           }
           img:hover {
-            background: var(--ohhho-smile-hover);
+            background: var(--ohhho-color-block);
             box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1),
               -1px -1px 2px rgba(255, 255, 255, 0.5),
               inset 8px 8px 16px rgba(0, 0, 0, 0.05),
@@ -247,7 +228,6 @@
         }
       }
       .vpreview-text {
-        border-top: 1px solid var(--ohhho-text-border);
         border-radius: 0;
         padding: 0.5em 0.5em;
         margin: 0.3em 0;
@@ -259,14 +239,14 @@
       }
     }
     .textarea-wrapper {
-      color: var(--ohhho-text);
+      color: var(--ohhho-color-text);
       width: 100%;
       height: 100%;
       background: transparent;
       position: relative;
       border-radius: 0;
       textarea {
-        color: var(--ohhho-text);
+        color: var(--ohhho-color-text);
         width: 100%;
         background: transparent;
         border: none;
@@ -274,7 +254,6 @@
         min-height: 8em;
         margin: 0;
         &:focus {
-          border-color: var(--ohhho-text-focus);
           outline: 0;
         }
       }
@@ -290,7 +269,7 @@
         border-radius: 0;
         border-bottom: 1px dashed var(--ohhho-wrap-border);
         input {
-          color: var(--ohhho-text);
+          color: var(--ohhho-color-text);
           border: none;
           border-radius: 0;
           padding: 0.6em;
@@ -298,7 +277,6 @@
           line-height: 2;
           font-size: 1em !important;
           &:focus {
-            border-color: var(--ohhho-text-focus);
             outline: 0;
           }
         }
@@ -319,13 +297,13 @@
         padding: 2px 0 0;
 
         button {
-          color: var(--ohhho-btn);
+          color: var(--ohhho-color-text);
           width: 100%;
           line-height: 2;
           font-weight: bolder;
           border-radius: 30px;
-          border: 1px solid var(--ohhho-btn-border);
-          background-color: var(--ohhho-btn-background);
+          border: 1px solid var(--ohhho-color-block);
+          background-color: var(--ohhho-color-card);
           padding: 0.4em 0.5em;
           -webkit-appearance: none;
           -moz-appearance: none;
@@ -337,7 +315,7 @@
           font-size: 1em !important;
         }
         button:hover {
-          background-color: var(--ohhho-btn-hover);
+          background-color: var(--ohhho-activate);
         }
       }
       @media screen and(max-width: 720px) {
@@ -368,7 +346,7 @@
       .vcode {
         width: 75px;
         border-radius: 5px;
-        background: var(--ohhho-mark-code);
+        background: var(--ohhho-color-block);
         &:focus {
           border-color: var(--ohhho-theme);
           background-color: var(--ohhho-mark-text);
@@ -416,14 +394,14 @@
       z-index: 2;
       .count {
         font-size: 1.375rem;
-        color: var(--ohhho-count);
+        color: var(--ohhho-color-text);
         font-weight: inherit;
       }
     }
   }
   a {
     text-decoration: none;
-    color: var(--ohhho-a);
+    color: var(--ohhho-color-a);
     border: none;
   }
   .txt-center {
@@ -443,9 +421,10 @@
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    border: 1px solid var(--ohhho-btn-border);
+    border: 1px solid var(--ohhho-color-block);
     border-radius: 0.1em;
-    color: var(--ohhho-sbmt);
+    color: var(--ohhho-color-text);
+    background: var(--ohhho-color-card);
     padding: 0.5em 2.3em;
     margin: 0 0.5em;
     cursor: pointer;
@@ -460,7 +439,7 @@
   }
   .vbtn:active,
   .vbtn:hover {
-    background: var(--ohhho-sbmt-hover);
+    background: var(--ohhho-color-block);
   }
   .vpage {
     margin: 1.5em 0;
@@ -470,13 +449,13 @@
       line-height: 2.5em;
       text-align: center;
       cursor: pointer;
-      color: var(--ohhho-more);
-      background: var(--ohhho-more-background);
+      color: var(--ohhho-color-text);
+      background: var(--ohhho-color-card);
       border-radius: 1.25em;
     }
     .more:hover {
       color: var(--ohhho-activate);
-      background: var(--ohhho-more-background-hover);
+      background: var(--ohhho-color-block);
     }
   }
   .vlist {
@@ -560,7 +539,7 @@
             height: 1.2em;
           }
           .vtime {
-            color: var(--ohhho-time);
+            color: var(--ohhho-color-text);
             display: inline-block;
             font-weight: normal;
             font-size: 0.75em;
@@ -578,7 +557,7 @@
             position: relative;
             overflow: auto;
             a {
-              color: var(--ohhho-a);
+              color: var(--ohhho-color-a);
               line-height: inherit;
               position: relative;
               cursor: pointer;
@@ -656,7 +635,7 @@
         .vshow-children-wrapper {
           margin: 0 0 2em;
           .vshow-children {
-            color: var(--ohhho-text);
+            color: var(--ohhho-color-text);
             text-decoration: underline;
             cursor: pointer;
           }
@@ -666,7 +645,7 @@
     .vempty {
       padding: 20px;
       text-align: center;
-      color: var(--ohhho-empty);
+      color: var(--ohhho-color-text);
     }
   }
   /************ Loading ************/

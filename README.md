@@ -32,19 +32,19 @@
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.20/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.21/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.20/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.21/worker/dist/worker.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.20/dist/ohhh.o.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.21/dist/ohhh.o.min.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.20/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.21/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.20/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.21/worker/dist/worker.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.20/dist/ohhh.o.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.21/dist/ohhh.o.min.js.sig
 
 # 参数和指标
 
@@ -193,6 +193,18 @@ Cloudflare  防火墙 API文档：
 
   https://developers.cloudflare.com/firewall/cf-firewall-rules
 
+# 简易管理系统
+
+环境变量：
+
+`SITEPATH`
+
+`USERNAME`
+
+`PASSWORD`
+
+`OHHHOPATH`
+
 # API
 
 ## 配色方案
@@ -209,17 +221,27 @@ Cloudflare  防火墙 API文档：
 
 当前评论数据已完成存储后，向目标API地址发送包含当前评论数据的POST请求，供外部程序实现通知功能、垃圾评论检测等。
 
-# 简易管理系统
+# KPI
 
-环境变量：
+KPI 即 Kernel API
 
-`SITEPATH`
+```bash
+npm i --save ohhho
+```
 
-`USERNAME`
+安装后可以在项目中直接使用[ohhho/worker/kernel](https://github.com/MHuiG/ohhho/tree/master/worker/kernel)中封装后的方法
 
-`PASSWORD`
+例如 kernel.cf.api.getFilters() 等,示例：
 
-`OHHHOPATH`
+```js
+import kernel from 'ohhho/worker/kernel'
+......
+    if (path.startsWith("/test-md")) {
+        const s = urlObj.searchParams.get('s')
+        return new Response(kernel.util.getMd(s), kernel.util.headers.js)
+    }
+......
+```
 
 # 如何使用
 
@@ -227,7 +249,7 @@ Cloudflare  防火墙 API文档：
 
 # 大事记
 
-2021.04.01 内核完成初步封装
+2021.04.01 内核首次完成 Kernel API 封装
 
 2021.03.25 内核部署 CloudFlareKV/IPFS 存储方案B,并废弃旧有数据存储方案
 

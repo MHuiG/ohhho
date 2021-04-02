@@ -1,6 +1,6 @@
 {
   "name": "ohhho",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "A simple and minimalist comment system.",
   "main": "/dist/ohhho.min.js",
   "author": {
@@ -53,6 +53,11 @@
     "url-loader": "4.1.1"
   },
   "dependencies": {
+    "blueimp-md5": "2.18.0",
+    "highlight.js": "10.6.0",
+    "marked": "2.0.1",
+    "ua-parser-js": "0.7.24",
+    "xss": "1.0.8",
     "@webpack-cli/serve": "^1.1.0",
     "autoprefixer": "9.8.6",
     "css-loader": "^5.0.0",
