@@ -2,7 +2,7 @@ import Bean from './Bean'
 
 function FetchBase (root) {
   root.fetchParentList = (root, pageNum) => {
-    MV.websocket.send(JSON.stringify({"opt":"ParentList","path":root.conf.path,"pageSize":root.conf.pageSize,page: pageNum,tz: new Date() }));
+    MV.websocket.send(JSON.stringify({ opt: 'ParentList', path: root.conf.path, pageSize: root.conf.pageSize, page: pageNum, tz: new Date() }))
   }
   root.fetchNextList = (root, id, callback) => {
     const list = []
@@ -65,7 +65,7 @@ function FetchBase (root) {
       data.rid = parentNode.id
     }
     console.log(data) // test
-    MV.websocket.send(JSON.stringify({"opt":"postComment","msg":data,tz: new Date() }));
+    MV.websocket.send(JSON.stringify({ opt: 'postComment', msg: data, tz: new Date() }))
   }
 }
 

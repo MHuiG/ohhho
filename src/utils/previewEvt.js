@@ -9,9 +9,9 @@ const previewEvt = (root) => {
         root.C.comment = root.C.comment.replace(R, `![${m}](${em})`)
       }
     }
-    MV.websocket.send(JSON.stringify({"opt":"previewEvt","msg":root.C.comment,tz: new Date() }));
+    MV.websocket.send(JSON.stringify({ opt: 'previewEvt', msg: root.C.comment, tz: new Date() }))
   }
-  root.previewEvtWS = (root,data) => {
+  root.previewEvtWS = (root, data) => {
     const previewBtn = root.el.querySelector('.vpreview-btn')
     const previewText = root.el.querySelector('.vpreview-text')
     const veditor = root.el.querySelector('.veditor')

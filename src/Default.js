@@ -1,4 +1,4 @@
-export const VERSION = '0.0.22'
+export const VERSION = '0.0.23'
 export const MVUrl = 'https://cdn.jsdelivr.net/npm/ohhho@' + VERSION
 export const avatarUrl = 'https://sdn.geekzu.org/avatar'
 export const avatarD = 'robohash'

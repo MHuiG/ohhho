@@ -1,6 +1,6 @@
 {
   "name": "ohhho",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "A simple and minimalist comment system.",
   "main": "/dist/ohhho.min.js",
   "author": {

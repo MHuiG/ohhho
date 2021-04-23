@@ -32,19 +32,19 @@
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.22/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.23/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.22/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.23/worker/dist/worker.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.22/dist/ohhh.o.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.23/dist/ohhh.o.min.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.22/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.23/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.22/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.23/worker/dist/worker.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.22/dist/ohhh.o.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.23/dist/ohhh.o.min.js.sig
 
 # 参数和指标
 

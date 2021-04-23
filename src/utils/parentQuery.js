@@ -4,7 +4,7 @@ const parentQuery = (root) => {
   root.TotalPages = 0
   root.parentQuery = (pageNum = 1) => {
     root.loading.show()
-    root.pageNum=pageNum
+    root.pageNum = pageNum
     root.fetchParentList(root, pageNum)
   }
   root.fetchParentListWS = (rets) => {
@@ -40,5 +40,3 @@ const parentQuery = (root) => {
   }
 }
 module.exports = parentQuery
-// https://datatracker.ietf.org/doc/rfc6455/
-// https://developer.mozilla.org/zh-CN/docs/Web/API/WebSockets_API
