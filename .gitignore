@@ -8,3 +8,4 @@ package-lock.json
 *.toml
 worker/worker/
 worker/wrangler.toml
+worker/worker/script.js

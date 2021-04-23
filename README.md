@@ -32,26 +32,26 @@
 
 最终生成物：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.21/dist/ohhho.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.22/dist/ohhho.min.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.21/worker/dist/worker.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.22/worker/dist/worker.js
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.21/dist/ohhh.o.min.js
+https://cdn.jsdelivr.net/npm/ohhho@0.0.22/dist/ohhh.o.min.js
 
 签名文件：
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.21/dist/ohhho.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.22/dist/ohhho.min.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.21/worker/dist/worker.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.22/worker/dist/worker.js.sig
 
-https://cdn.jsdelivr.net/npm/ohhho@0.0.21/dist/ohhh.o.min.js.sig
+https://cdn.jsdelivr.net/npm/ohhho@0.0.22/dist/ohhh.o.min.js.sig
 
 # 参数和指标
 
 - 前端 JS 脚本完整版共计一个（ohhho.min.js） 文件大小约为 80 KB，gzip 压缩后约为 25 KB。
 - 前端 JS 脚本无样式版共计一个（ohhh.o.min.js） 文件大小约为 45 KB。
 - CloudFlareWorker 脚本共计一个（worker.js）。
-- 系统关键请求共计3个。
+- 系统关键请求共计 ~3个~ 1个(websocket)。
 - ~~中国地区使用 CloudFlareAnycast 技术和 DNSPOD 智能解析技术 以及 优选 CloudFlare节点 IP 负载均衡的方法，~~ 系统关键请求时间可在 200-500ms 左右。
 
 
@@ -248,6 +248,8 @@ import kernel from 'ohhho/worker/kernel'
 目前代码处于可用或不可用状态，不提供任何担保。
 
 # 大事记
+
+2021.04.23 内核首次完成 websocket 部署
 
 2021.04.01 内核首次完成 Kernel API 封装
 

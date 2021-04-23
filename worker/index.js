@@ -181,6 +181,21 @@ async function handleRequest(event) {
       return Response.redirect(OHHHOPATH+"/ohhho/dash", 302)
     }
     /*********************************************************************************************** */
+    if (path.startsWith("/ws")) {
+      const upgradeHeader = request.headers.get("Upgrade");
+      if (upgradeHeader !== "websocket") {
+        return new Response("Expected websocket", { status: 400 });
+      }
+
+      const [client, server] = Object.values(new WebSocketPair());
+      await handleWebSocketSession(server,event);
+
+      return new Response(null, {
+        status: 101,
+        webSocket: client,
+      });
+    }
+    /*********************************************************************************************** */
     return new Response("Hello world", kernel.util.headers.js);
   } catch (e) {
     console.log(e);
@@ -330,5 +345,116 @@ addEventListener("scheduled", event => {
 async function handleScheduled(event) {
   await kernel.cf.api.setSecurityLevel("essentially_off")
   await kernel.cf.api.createRoute()
+}
+/*********************************************************************************************** */
+
+/*********************************************************************************************** */
+async function handleWebSocketSession(websocket,event) {
+  const request = event.request;
+  const CFConnectingIP=request.headers.get("CF-Connecting-IP")
+  const XForwardedFor=request.headers.get("X-Forwarded-For")
+  const CfIpcountry=request.headers.get("Cf-Ipcountry")
+  const XRealIP=new Map(request.headers).get('x-real-ip')
+  websocket.accept();
+  // 连接测试 回传信息
+  setInterval(()=>{
+    websocket.send(JSON.stringify({"code":0,"msg":"Connection test",tz: new Date() }));
+  },5000)
+  // 连接开始
+  websocket.send(JSON.stringify({"code":200,"msg":"Connection start",tz: new Date() }));
+
+  websocket.addEventListener("message", async ({ data }) => {
+    try {
+      let m = JSON.parse(data)
+      if(m.opt=="previewEvt"){
+        websocket.send(JSON.stringify({"code":1,"msg":kernel.util.getMd(m.msg),tz: new Date() }));
+      }else if(m.opt=="TotalPages"){
+        let meta = await kernel.cf.kv.getMeta()
+        let count=0
+        if(meta.sub[m.path]){
+          count=meta.sub[m.path].f
+        }
+        let num=Math.ceil(count / m.pageSize)
+        websocket.send(JSON.stringify({"code":2,"count":count,"TotalPages":num,tz: new Date() }));
+      }else if(m.opt=="ParentList"){
+        const pageSize = m.pageSize
+        const page = m.page
+        const path = m.path
+        let meta = await kernel.cf.kv.getMeta()
+        let c=0
+        if(meta.sub[path]){
+          let hash= meta.sub[path].h
+          c=await kernel.ipfs.cat(hash)
+        }
+        if(c){
+          let p=[]
+          for (let i = 0; i < c.length; i++) {
+            let ele = getIt(c[i]);
+            if(ele.children){
+              for (let j = 0; j < ele.children.length; j++) {
+                const it = ele.children[j];
+                if(!it.approval){
+                  ele.children.splice(j,1);
+                }
+              }
+            }
+            if(ele.approval){
+              p.push(ele)
+            }
+          }
+          p.reverse()
+          let q=[]
+          for (let index =(page-1)*pageSize; (index < page*pageSize)&&(index<p.length) ; index++) {
+            const element = p[index];
+            q.push(element)
+          }
+          websocket.send(JSON.stringify({"code":3,"msg":q,tz: new Date() }));
+        }
+        websocket.send(JSON.stringify({"code":3,"msg":{},tz: new Date() }));
+      }else if(m.opt=="postComment"){
+        let sec=1
+        let body=m.msg
+        body.ip = CFConnectingIP || XRealIP
+        body.XForwardedFor = XForwardedFor
+        body.CfIpcountry = CfIpcountry
+        /************************************** */
+        // 检测 request  IP-Time
+        // 15min
+        let ohhhho_under_attack=await OHHHO.get("ohhhho_under_attack")
+        if(ohhhho_under_attack){
+          let ans=await kernel.sec.securityCheckPostWS(body)
+          if(ans.code!=200){
+            websocket.send(JSON.stringify({"code":403,"msg":ans,tz: new Date() }));
+            sec=0
+          }
+        }else{
+          event.waitUntil(kernel.sec.securityCheckPostWS(body))
+        }
+        // 检测大文本攻击
+        var la =body.comment?body.comment.length:0
+        var lb =body.link?body.link.length:0
+        var lc =body.nick?body.nick.length:0
+        var ln = Math.max( la,lb,lc )
+        if(ln>1000000){
+          websocket.send(JSON.stringify({"code":403,"msg":"那太大了",tz: new Date() }));
+          sec=0
+        }
+        /************************************** */
+        if(sec){
+          let Item = toItem(body)
+          event.waitUntil(SaveComment(Item,body))
+          let it = getIt(Item)
+          websocket.send(JSON.stringify({"code":4,"msg":it,tz: new Date() }))
+        }
+      }else{
+        websocket.send(JSON.stringify({"code":404,"msg":"Unknown message received",tz: new Date() }));
+      }
+    } catch (error) {
+      websocket.send(JSON.stringify({"code":500,"msg":error,tz: new Date() }));
+    }
+  });
+  websocket.addEventListener("close", async (evt) => {
+    // console.log(evt);
+  });
 }
 /*********************************************************************************************** */
